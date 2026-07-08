@@ -20,6 +20,7 @@ admin.site.site_title = 'SEMS Admin'
 urlpatterns = [
     path('sys-admin/', admin.site.urls),
     path('dashboard/', include('apps.dashboard.urls')),  # phase 2
+    path('dashboard/registrations/', include('apps.registrations.urls')),
     # path('api/v1/', include('config.api_urls')),          # phase: API module
 ]
 

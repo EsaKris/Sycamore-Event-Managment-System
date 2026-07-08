@@ -19,7 +19,7 @@
             {% else %}No active or upcoming event — showing totals across all events.{% endif %}
           </div>
         </div>
-        <a href="#" class="btn btn-primary">
+        <a href="{% url 'registrations:start' %}" class="btn btn-primary">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>
           New Registration
         </a>
@@ -98,7 +98,7 @@
             {% if recent_registrations %}
               <div class="row-list">
                 {% for reg in recent_registrations %}
-                  <div class="row-item">
+                  <a href="{% url 'registrations:detail' reg.pk %}" class="row-item" style="text-decoration:none;color:inherit">
                     <div class="row-item-main">
                       <div class="avatar" style="width:28px;height:28px;font-size:11px">{{ reg.person.first_name|slice:":1"|upper }}{{ reg.person.last_name|slice:":1"|upper }}</div>
                       <div style="min-width:0">
@@ -110,7 +110,7 @@
                       <span class="pill {% if reg.category == 'worker' %}pill-worker{% else %}pill-participant{% endif %}">{{ reg.get_category_display }}</span>
                       <div style="margin-top:4px">{{ reg.created_at|timesince }} ago</div>
                     </div>
-                  </div>
+                  </a>
                 {% endfor %}
               </div>
             {% else %}
@@ -130,7 +130,7 @@
             <div class="card-title">Quick actions</div>
             <div class="card-subtitle">Common front-desk tasks</div>
             <div class="quick-actions">
-              <a href="#" class="quick-action">
+              <a href="{% url 'registrations:start' %}" class="quick-action">
                 <div class="qa-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg></div>
                 <div class="qa-title">New Registration</div>
               </a>

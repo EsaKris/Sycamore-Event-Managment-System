@@ -1,0 +1,69 @@
+{% extends 'dashboard/base.html' %}
+{% block title %}{{ registration.registration_number }}{% endblock %}
+{% block body %}
+<div class="app-shell">
+  {% include 'dashboard/partials/sidebar.html' %}
+  <div class="main-content">
+    {% include 'dashboard/partials/topbar.html' %}
+    <div class="content-inner">
+
+      <div class="page-header">
+        <div>
+          <div class="page-eyebrow"><a href="{% url 'registrations:list' %}" class="text-muted">Registrations</a> / {{ registration.registration_number }}</div>
+          <h1 class="page-title">{{ registration.person.full_name }}</h1>
+          <div class="page-subtitle">{{ registration.event.title }} · {{ registration.person.person_id }}</div>
+        </div>
+        <span class="pill pill-{{ registration.status }}" style="font-size:12px;padding:6px 12px">{{ registration.get_status_display }}</span>
+      </div>
+
+      <div class="card" style="max-width:640px">
+        <div class="summary-grid">
+          <div>
+            <div class="summary-item-label">Category</div>
+            <div class="summary-item-value">
+              <span class="pill {% if registration.category == 'worker' %}pill-worker{% else %}pill-participant{% endif %}">{{ registration.get_category_display }}</span>
+            </div>
+          </div>
+          {% if registration.worker_type %}
+          <div>
+            <div class="summary-item-label">Worker type</div>
+            <div class="summary-item-value">{{ registration.get_worker_type_display }}</div>
+          </div>
+          {% endif %}
+          {% if registration.department %}
+          <div>
+            <div class="summary-item-label">Department</div>
+            <div class="summary-item-value">{{ registration.department.name }}</div>
+          </div>
+          {% endif %}
+          <div>
+            <div class="summary-item-label">Phone</div>
+            <div class="summary-item-value">{{ registration.person.phone_number }}</div>
+          </div>
+          <div>
+            <div class="summary-item-label">Email</div>
+            <div class="summary-item-value">{{ registration.person.email_address|default:"—" }}</div>
+          </div>
+          <div>
+            <div class="summary-item-label">Church</div>
+            <div class="summary-item-value">{{ registration.person.church_name|default:"—" }}</div>
+          </div>
+          <div>
+            <div class="summary-item-label">Accommodation</div>
+            <div class="summary-item-value">{{ registration.accommodation_requested|yesno:"Requested,Not requested" }}</div>
+          </div>
+          <div>
+            <div class="summary-item-label">Returning attendee</div>
+            <div class="summary-item-value">{{ registration.is_returning_attendee|yesno:"Yes,No" }}</div>
+          </div>
+          <div>
+            <div class="summary-item-label">Registered</div>
+            <div class="summary-item-value">{{ registration.created_at|date:"M j, Y g:i A" }}</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

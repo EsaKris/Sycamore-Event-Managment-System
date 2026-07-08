@@ -1,0 +1,47 @@
+{% extends 'registrations/_wizard_base.html' %}
+{% block title %}New Registration{% endblock %}
+
+{% block wizard_content %}
+<div class="wizard-header">
+  <div class="wizard-eyebrow">New Registration · Step 1 of 4</div>
+  <h1 class="wizard-title">Event &amp; attendance history</h1>
+  <div class="wizard-subtitle">Start by choosing the event, then ask the attendee this one question — it decides everything else.</div>
+</div>
+
+<form method="post" novalidate>
+  {% csrf_token %}
+
+  {% if form.non_field_errors %}
+    <div class="alert alert-error">{{ form.non_field_errors.0 }}</div>
+  {% endif %}
+
+  <div class="field-group">
+    <label class="field-label" for="{{ form.event.id_for_label }}">Event<span class="field-required">*</span></label>
+    {{ form.event }}
+    {% if form.event.errors %}<div class="field-error">{{ form.event.errors.0 }}</div>{% endif %}
+    <div class="field-hint">Only future/active events are listed here. Archived events are hidden.</div>
+  </div>
+
+  <div class="field-group">
+    <label class="field-label">Have you attended any previous Sycamore Conference?<span class="field-required">*</span></label>
+    <div class="radio-cards cols-2">
+      {% for radio in form.attended_before %}
+        <label class="radio-card">
+          {{ radio.tag }}
+          <div>
+            <div class="rc-title">{{ radio.choice_label }}</div>
+          </div>
+        </label>
+      {% endfor %}
+    </div>
+    {% if form.attended_before.errors %}<div class="field-error">{{ form.attended_before.errors.0 }}</div>{% endif %}
+  </div>
+
+  <div class="form-actions" style="justify-content:flex-end">
+    <button type="submit" class="btn btn-primary">
+      Continue
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+    </button>
+  </div>
+</form>
+{% endblock %}
