@@ -1,0 +1,38 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+{% block title %}Sign in{% endblock %}
+{% block body %}
+<div class="login-shell">
+  <div class="login-rings">{% include 'dashboard/partials/rings.html' with size=520 %}</div>
+
+  <div class="login-card">
+    <div class="login-brand">
+      <div class="brand-mark">SY</div>
+      <div class="name">SEMS</div>
+      <div class="sub">Sycamore Event Management System</div>
+    </div>
+
+    {% if form.non_field_errors %}
+      <div class="form-error-box">{{ form.non_field_errors.0 }}</div>
+    {% endif %}
+
+    <form method="post" novalidate>
+      {% csrf_token %}
+      <div class="field-group">
+        <label class="field-label" for="{{ form.username.id_for_label }}">Username</label>
+        <input class="field-input" type="text" name="{{ form.username.html_name }}" id="{{ form.username.id_for_label }}" autofocus required>
+        {% if form.username.errors %}<div class="field-error">{{ form.username.errors.0 }}</div>{% endif %}
+      </div>
+      <div class="field-group">
+        <label class="field-label" for="{{ form.password.id_for_label }}">Password</label>
+        <input class="field-input" type="password" name="{{ form.password.html_name }}" id="{{ form.password.id_for_label }}" required>
+        {% if form.password.errors %}<div class="field-error">{{ form.password.errors.0 }}</div>{% endif %}
+      </div>
+      <input type="hidden" name="next" value="{{ next }}">
+      <button type="submit" class="btn btn-primary login-submit">Sign in</button>
+    </form>
+
+    <div class="login-footnote">Administrator access only · Contact your Super Administrator for an account</div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,12 @@
+{% comment %}
+Signature motif: concentric "growth ring" arcs, echoing a tree cross-section
+(Sycamore). Reused at different sizes: sidebar brand corner, login
+background, stat-card decoration, empty states.
+{% endcomment %}
+<svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" class="{{ class|default:'rings' }}" width="{{ size|default:120 }}" height="{{ size|default:120 }}">
+  <circle cx="100" cy="100" r="94" stroke="var(--accent)" stroke-width="1" opacity="0.15"/>
+  <circle cx="100" cy="100" r="74" stroke="var(--accent)" stroke-width="1" opacity="0.22"/>
+  <circle cx="100" cy="100" r="54" stroke="var(--accent)" stroke-width="1" opacity="0.30"/>
+  <circle cx="100" cy="100" r="34" stroke="var(--accent)" stroke-width="1" opacity="0.4"/>
+  <circle cx="100" cy="100" r="14" stroke="var(--accent)" stroke-width="1.5" opacity="0.6"/>
+</svg>

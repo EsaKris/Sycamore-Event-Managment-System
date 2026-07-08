@@ -1,0 +1,222 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+{% block title %}Dashboard{% endblock %}
+{% block body %}
+<div class="app-shell">
+  {% include 'dashboard/partials/sidebar.html' %}
+
+  <div class="main-content">
+    {% include 'dashboard/partials/topbar.html' %}
+
+    <div class="content-inner">
+
+      <div class="page-header">
+        <div>
+          <div class="page-eyebrow">Dashboard</div>
+          <h1 class="page-title">Welcome back, {{ request.user.first_name|default:request.user.username }}</h1>
+          <div class="page-subtitle">
+            {% if active_event %}Tracking <strong style="color:var(--text-secondary)">{{ active_event.title }}</strong> · {{ active_event.start_date|date:"M j" }}–{{ active_event.end_date|date:"M j, Y" }}
+            {% else %}No active or upcoming event — showing totals across all events.{% endif %}
+          </div>
+        </div>
+        <a href="#" class="btn btn-primary">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>
+          New Registration
+        </a>
+      </div>
+
+      <!-- Stat cards -->
+      <div class="stat-grid">
+        <div class="card stat-card">
+          <div class="ring-decor">{% include 'dashboard/partials/rings.html' with size=90 %}</div>
+          <div class="stat-label">Total Registrations</div>
+          <div class="stat-value">{{ total_registrations }}</div>
+          {% if registration_progress != None %}
+            <div class="stat-delta flat">{{ registration_progress }}% of capacity</div>
+          {% endif %}
+        </div>
+        <div class="card stat-card">
+          <div class="stat-label">Today's Registrations</div>
+          <div class="stat-value">{{ today_registrations }}</div>
+        </div>
+        <div class="card stat-card">
+          <div class="stat-label">Returning Attendees</div>
+          <div class="stat-value">{{ returning_attendees }}</div>
+        </div>
+        <div class="card stat-card">
+          <div class="stat-label">First-Time Visitors</div>
+          <div class="stat-value">{{ first_time_visitors }}</div>
+        </div>
+        <div class="card stat-card">
+          <div class="stat-label">Workers</div>
+          <div class="stat-value">{{ workers }}</div>
+        </div>
+        <div class="card stat-card">
+          <div class="stat-label">Participants</div>
+          <div class="stat-value">{{ participants }}</div>
+        </div>
+        <div class="card stat-card">
+          <div class="stat-label">Pastors</div>
+          <div class="stat-value">{{ pastors }}</div>
+        </div>
+        <div class="card stat-card">
+          <div class="stat-label">Departments</div>
+          <div class="stat-value">{{ departments_count }}</div>
+        </div>
+      </div>
+
+      {% if registration_progress != None %}
+      <div class="card" style="margin-bottom:20px">
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+          <span class="card-title">Registration progress</span>
+          <span class="text-muted" style="font-size:12.5px">{{ total_registrations }} / {{ active_event.max_capacity }}</span>
+        </div>
+        <div class="progress-track"><div class="progress-fill" style="width:{{ registration_progress }}%"></div></div>
+      </div>
+      {% endif %}
+
+      <div class="grid-2col">
+        <!-- LEFT COLUMN -->
+        <div style="display:flex;flex-direction:column;gap:18px">
+
+          <div class="card">
+            <div class="card-title">Registration trend</div>
+            <div class="card-subtitle">Last 7 days{% if active_event %} · {{ active_event.title }}{% endif %}</div>
+            <div class="trend-bars">
+              {% for point in trend %}
+                <div class="trend-bar-col">
+                  <div class="trend-bar {% if forloop.last %}is-today{% endif %}" style="height: {% widthratio point.count max_trend 100 %}%"></div>
+                  <div class="trend-bar-label">{{ point.date }}</div>
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">Recent registrations</div>
+            <div class="card-subtitle">Newest sign-ups across the system</div>
+            {% if recent_registrations %}
+              <div class="row-list">
+                {% for reg in recent_registrations %}
+                  <div class="row-item">
+                    <div class="row-item-main">
+                      <div class="avatar" style="width:28px;height:28px;font-size:11px">{{ reg.person.first_name|slice:":1"|upper }}{{ reg.person.last_name|slice:":1"|upper }}</div>
+                      <div style="min-width:0">
+                        <div class="row-item-title">{{ reg.person.full_name }}</div>
+                        <div class="row-item-sub">{{ reg.registration_number }} · {{ reg.event.title }}</div>
+                      </div>
+                    </div>
+                    <div class="row-item-meta">
+                      <span class="pill {% if reg.category == 'worker' %}pill-worker{% else %}pill-participant{% endif %}">{{ reg.get_category_display }}</span>
+                      <div style="margin-top:4px">{{ reg.created_at|timesince }} ago</div>
+                    </div>
+                  </div>
+                {% endfor %}
+              </div>
+            {% else %}
+              <div class="empty-state">
+                <div class="rings">{% include 'dashboard/partials/rings.html' with size=70 %}</div>
+                <p>No registrations yet. They'll show up here as people sign up.</p>
+              </div>
+            {% endif %}
+          </div>
+
+        </div>
+
+        <!-- RIGHT COLUMN -->
+        <div style="display:flex;flex-direction:column;gap:18px">
+
+          <div class="card">
+            <div class="card-title">Quick actions</div>
+            <div class="card-subtitle">Common front-desk tasks</div>
+            <div class="quick-actions">
+              <a href="#" class="quick-action">
+                <div class="qa-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg></div>
+                <div class="qa-title">New Registration</div>
+              </a>
+              <a href="#" class="quick-action">
+                <div class="qa-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg></div>
+                <div class="qa-title">Find a Person</div>
+              </a>
+              <a href="#" class="quick-action">
+                <div class="qa-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/></svg></div>
+                <div class="qa-title">Create Event</div>
+              </a>
+              <a href="#" class="quick-action">
+                <div class="qa-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"/></svg></div>
+                <div class="qa-title">Add Worker</div>
+              </a>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">Top departments</div>
+            <div class="card-subtitle">By worker headcount</div>
+            {% if top_departments %}
+              <div class="row-list">
+                {% for dept in top_departments %}
+                  <div class="row-item">
+                    <div class="row-item-title">{{ dept.department__name }}</div>
+                    <div class="row-item-meta">{{ dept.total }}</div>
+                  </div>
+                {% endfor %}
+              </div>
+            {% else %}
+              <div class="empty-state" style="padding:16px 10px">
+                <p>No worker registrations yet.</p>
+              </div>
+            {% endif %}
+          </div>
+
+          <div class="card">
+            <div class="card-title">Upcoming events</div>
+            {% if upcoming_events %}
+              <div class="row-list">
+                {% for ev in upcoming_events %}
+                  <div class="row-item">
+                    <div class="row-item-main">
+                      <div style="min-width:0">
+                        <div class="row-item-title">{{ ev.title }}</div>
+                        <div class="row-item-sub">{{ ev.venue|default:"Venue TBA" }}</div>
+                      </div>
+                    </div>
+                    <div class="row-item-meta">{{ ev.start_date|date:"M j" }}</div>
+                  </div>
+                {% endfor %}
+              </div>
+            {% else %}
+              <div class="empty-state" style="padding:16px 10px"><p>No upcoming events scheduled.</p></div>
+            {% endif %}
+          </div>
+
+          <div class="card">
+            <div class="card-title">Recent activity</div>
+            <div class="card-subtitle">Administrator actions</div>
+            {% if recent_activity %}
+              <div class="row-list">
+                {% for log in recent_activity %}
+                  <div class="row-item">
+                    <div class="row-item-main">
+                      <div style="min-width:0">
+                        <div class="row-item-title">{{ log.action }}</div>
+                        <div class="row-item-sub">{{ log.administrator|default:"System" }}</div>
+                      </div>
+                    </div>
+                    <div class="row-item-meta">{{ log.created_at|timesince }} ago</div>
+                  </div>
+                {% endfor %}
+              </div>
+            {% else %}
+              <div class="empty-state" style="padding:16px 10px">
+                <p>Nothing logged yet. Actions will appear here once the Activity Logs module is wired up.</p>
+              </div>
+            {% endif %}
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}
