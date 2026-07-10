@@ -117,6 +117,13 @@ class Person(TimeStampedModel, SoftDeleteModel):
         parts = [self.first_name, self.middle_name, self.last_name]
         return ' '.join(p for p in parts if p)
 
+    @property
+    def qr_payload(self) -> str:
+        """The exact string encoded into this person's QR code. Prefixed
+        so a scanner can tell a SEMS code apart from an unrelated QR
+        someone might scan by mistake."""
+        return f"SEMS:{self.qr_token}"
+
     def save(self, *args, **kwargs):
         if not self.person_id:
             with transaction.atomic():

@@ -24,8 +24,8 @@
     <a href="#" class="sidebar-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>Departments</a>
 
     <div class="sidebar-section-label">Check-in</div>
-    <a href="#" class="sidebar-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="9"/></svg>Attendance <span class="badge-soon" style="margin-left:auto">soon</span></a>
-    <a href="#" class="sidebar-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3h-3zM20 14v7M14 20h7"/></svg>QR Scanner <span class="badge-soon" style="margin-left:auto">soon</span></a>
+    <a href="{% url 'attendance:log' %}" class="sidebar-link {% if request.resolver_match.app_name == 'attendance' and request.resolver_match.url_name == 'log' %}active{% endif %}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="9"/></svg>Attendance</a>
+    <a href="{% url 'attendance:scanner' %}" class="sidebar-link {% if request.resolver_match.url_name == 'scanner' %}active{% endif %}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3h-3zM20 14v7M14 20h7"/></svg>QR Scanner</a>
     <a href="#" class="sidebar-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="4" width="16" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M15 8h2M15 12h2M6 18h12"/></svg>ID Cards <span class="badge-soon" style="margin-left:auto">soon</span></a>
 
     <div class="sidebar-section-label">Engagement</div>

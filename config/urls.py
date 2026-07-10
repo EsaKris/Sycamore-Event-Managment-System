@@ -21,6 +21,8 @@ urlpatterns = [
     path('sys-admin/', admin.site.urls),
     path('dashboard/', include('apps.dashboard.urls')),  # phase 2
     path('dashboard/registrations/', include('apps.registrations.urls')),
+        path('dashboard/attendance/', include('apps.attendance.urls')),
+        path('dashboard/people/', include('apps.people.urls')),
     # path('api/v1/', include('config.api_urls')),          # phase: API module
 ]
 

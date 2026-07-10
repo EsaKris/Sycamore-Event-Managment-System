@@ -1,0 +1,13 @@
+<div class="row-item">
+  <div class="row-item-main">
+    <div class="avatar" style="width:28px;height:28px;font-size:11px">{{ a.person.first_name|slice:":1"|upper }}{{ a.person.last_name|slice:":1"|upper }}</div>
+    <div style="min-width:0">
+      <div class="row-item-title">{{ a.person.full_name }}</div>
+      <div class="row-item-sub">{{ a.person.person_id }}</div>
+    </div>
+  </div>
+  <div class="row-item-meta">
+    <span class="pill {% if a.check_type == 'check_in' %}pill-participant{% else %}pill-worker{% endif %}">{{ a.get_check_type_display }}</span>
+    <div style="margin-top:4px">{{ a.created_at|time:"g:i A" }}</div>
+  </div>
+</div>

@@ -63,15 +63,41 @@
           <div class="stat-label">Departments</div>
           <div class="stat-value">{{ departments_count }}</div>
         </div>
+        <div class="card stat-card">
+          <div class="stat-label">Currently Checked In</div>
+          <div class="stat-value">{{ current_attendance }}</div>
+          <div class="stat-delta flat">today</div>
+        </div>
+        <div class="card stat-card">
+          <div class="stat-label">Today's Check-ins</div>
+          <div class="stat-value">{{ today_check_ins }}</div>
+        </div>
+        <div class="card stat-card">
+          <div class="stat-label">Today's Check-outs</div>
+          <div class="stat-value">{{ today_check_outs }}</div>
+        </div>
       </div>
 
-      {% if registration_progress != None %}
-      <div class="card" style="margin-bottom:20px">
-        <div style="display:flex;justify-content:space-between;margin-bottom:8px">
-          <span class="card-title">Registration progress</span>
-          <span class="text-muted" style="font-size:12.5px">{{ total_registrations }} / {{ active_event.max_capacity }}</span>
+      {% if registration_progress != None or attendance_progress != None %}
+      <div class="grid-2col" style="margin-bottom:20px">
+        {% if registration_progress != None %}
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+            <span class="card-title">Registration progress</span>
+            <span class="text-muted" style="font-size:12.5px">{{ total_registrations }} / {{ active_event.max_capacity }}</span>
+          </div>
+          <div class="progress-track"><div class="progress-fill" style="width:{{ registration_progress }}%"></div></div>
         </div>
-        <div class="progress-track"><div class="progress-fill" style="width:{{ registration_progress }}%"></div></div>
+        {% endif %}
+        {% if attendance_progress != None %}
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+            <span class="card-title">Attendance progress</span>
+            <span class="text-muted" style="font-size:12.5px">{{ attendance_progress }}% have checked in at least once</span>
+          </div>
+          <div class="progress-track"><div class="progress-fill" style="width:{{ attendance_progress }}%;background:var(--positive)"></div></div>
+        </div>
+        {% endif %}
       </div>
       {% endif %}
 
@@ -142,9 +168,9 @@
                 <div class="qa-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/></svg></div>
                 <div class="qa-title">Create Event</div>
               </a>
-              <a href="#" class="quick-action">
-                <div class="qa-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"/></svg></div>
-                <div class="qa-title">Add Worker</div>
+              <a href="{% url 'attendance:scanner' %}" class="quick-action">
+                <div class="qa-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></div>
+                <div class="qa-title">Scan Attendance</div>
               </a>
             </div>
           </div>
@@ -186,6 +212,34 @@
               </div>
             {% else %}
               <div class="empty-state" style="padding:16px 10px"><p>No upcoming events scheduled.</p></div>
+            {% endif %}
+          </div>
+
+          <div class="card">
+            <div class="card-title">Recent QR scans</div>
+            <div class="card-subtitle">Latest check-ins/outs across all events</div>
+            {% if recent_scans %}
+              <div class="row-list">
+                {% for a in recent_scans %}
+                  <div class="row-item">
+                    <div class="row-item-main">
+                      <div class="avatar" style="width:28px;height:28px;font-size:11px">{{ a.person.first_name|slice:":1"|upper }}{{ a.person.last_name|slice:":1"|upper }}</div>
+                      <div style="min-width:0">
+                        <div class="row-item-title">{{ a.person.full_name }}</div>
+                        <div class="row-item-sub">{{ a.session.label }}</div>
+                      </div>
+                    </div>
+                    <div class="row-item-meta">
+                      <span class="pill {% if a.check_type == 'check_in' %}pill-participant{% else %}pill-worker{% endif %}">{{ a.get_check_type_display }}</span>
+                      <div style="margin-top:4px">{{ a.created_at|timesince }} ago</div>
+                    </div>
+                  </div>
+                {% endfor %}
+              </div>
+            {% else %}
+              <div class="empty-state" style="padding:16px 10px">
+                <p>No scans yet. <a href="{% url 'attendance:scanner' %}" style="color:var(--accent)">Open the scanner</a> to start checking people in.</p>
+              </div>
             {% endif %}
           </div>
 
