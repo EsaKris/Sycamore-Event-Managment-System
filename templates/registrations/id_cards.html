@@ -1,0 +1,98 @@
+{% extends 'dashboard/base.html' %}
+{% block title %}ID Cards{% endblock %}
+{% block body %}
+<div class="app-shell">
+  {% include 'dashboard/partials/sidebar.html' %}
+  <div class="main-content">
+    {% include 'dashboard/partials/topbar.html' %}
+    <div class="content-inner">
+
+      <div class="page-header">
+        <div>
+          <div class="page-eyebrow">Check-in</div>
+          <h1 class="page-title">ID Cards</h1>
+          <div class="page-subtitle">Preview, download, or bulk-print badges for an event.</div>
+        </div>
+      </div>
+
+      {% include 'dashboard/partials/messages.html' %}
+
+      <div class="card" style="margin-bottom:18px">
+        <form method="get" style="display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap">
+          <div style="flex:1;min-width:220px">
+            <label class="field-label">Event</label>
+            <select name="event" class="field-input field-select">
+              <option value="">Select an event…</option>
+              {% for ev in events %}
+                <option value="{{ ev.id }}" {% if event.id == ev.id %}selected{% endif %}>{{ ev.title }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <button type="submit" class="btn btn-ghost">Load event</button>
+        </form>
+      </div>
+
+      {% if not event %}
+        <div class="card">
+          <div class="empty-state">
+            <div class="rings">{% include 'dashboard/partials/rings.html' with size=80 %}</div>
+            <p>Select an event to see its registrations and print badges.</p>
+          </div>
+        </div>
+      {% elif not registrations %}
+        <div class="card">
+          <div class="empty-state">
+            <div class="rings">{% include 'dashboard/partials/rings.html' with size=80 %}</div>
+            <p>No registrations for {{ event.title }} yet.</p>
+          </div>
+        </div>
+      {% else %}
+        <form method="post" action="{% url 'registrations:id_card_bulk_download' %}" id="bulk-form">
+          {% csrf_token %}
+          <input type="hidden" name="event" value="{{ event.id }}">
+
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px">
+            <label style="display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--text-secondary)">
+              <input type="checkbox" id="select-all"> Select all ({{ registrations|length }})
+            </label>
+            <div style="display:flex;gap:10px">
+              <button type="submit" class="btn btn-primary">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>
+                Download selected as PDF
+              </button>
+              <button type="submit" class="btn btn-ghost" onclick="document.querySelectorAll('.card-check').forEach(c=>c.checked=true)">Download all</button>
+            </div>
+          </div>
+
+          <div class="card-grid">
+            {% for reg in registrations %}
+              <div class="card" style="padding:14px">
+                <label style="display:flex;align-items:center;gap:8px;margin-bottom:10px;font-size:12.5px">
+                  <input type="checkbox" class="card-check" name="registration_ids" value="{{ reg.id }}">
+                  <span class="pill {% if reg.category == 'worker' %}pill-worker{% else %}pill-participant{% endif %}">{{ reg.card_label }}</span>
+                </label>
+                <img src="{% url 'registrations:id_card_preview' reg.pk %}" alt="ID card" style="width:100%;border-radius:6px;border:1px solid var(--border-subtle);margin-bottom:8px" loading="lazy">
+                <div style="font-size:12.5px;font-weight:600">{{ reg.person.full_name }}</div>
+                <div class="text-muted" style="font-size:11.5px;margin-bottom:8px">{{ reg.person.person_id }}</div>
+                <a href="{% url 'registrations:id_card_download' reg.pk %}" class="btn btn-ghost" style="width:100%;justify-content:center;font-size:11.5px;padding:6px">Download</a>
+              </div>
+            {% endfor %}
+          </div>
+        </form>
+      {% endif %}
+
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  const selectAll = document.getElementById('select-all');
+  if (selectAll) {
+    selectAll.addEventListener('change', function () {
+      document.querySelectorAll('.card-check').forEach(c => { c.checked = selectAll.checked; });
+    });
+  }
+</script>
+{% endblock %}

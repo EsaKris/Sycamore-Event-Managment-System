@@ -6,11 +6,18 @@ from django.db.models import Count
 from django.utils import timezone
 from django.views.generic import TemplateView
 
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.forms import PasswordChangeForm
+from django.contrib.auth import update_session_auth_hash
+from django.contrib import messages
+from django.shortcuts import redirect, render
+
 from apps.core.models import AuditLog
 from apps.departments.models import Department
 from apps.events.models import Event, EventStatus
 from apps.people.models import Gender, Person
 from apps.registrations.models import Registration, RegistrationCategory, WorkerType
+from apps.attendance.models import Attendance, CheckType
 
 from .forms import AdminLoginForm
 
@@ -88,6 +95,32 @@ class DashboardHomeView(LoginRequiredMixin, TemplateView):
         if active_event and active_event.max_capacity:
             registration_progress = round(min(total_registrations / active_event.max_capacity, 1.0) * 100)
 
+        # ---- Attendance (Phase: Attendance + QR) ----
+        event_attendance = Attendance.objects.filter(event=active_event) if active_event else Attendance.objects.none()
+        today_check_ins = event_attendance.filter(check_type=CheckType.CHECK_IN, created_at__date=today).count()
+        today_check_outs = event_attendance.filter(check_type=CheckType.CHECK_OUT, created_at__date=today).count()
+
+        # "Currently in the building": checked in today but not yet checked out of that same session.
+        checked_in_ids = set(
+            event_attendance.filter(check_type=CheckType.CHECK_IN, created_at__date=today)
+            .values_list('person_id', 'session_id')
+        )
+        checked_out_ids = set(
+            event_attendance.filter(check_type=CheckType.CHECK_OUT, created_at__date=today)
+            .values_list('person_id', 'session_id')
+        )
+        current_attendance = len(checked_in_ids - checked_out_ids)
+
+        attendance_progress = None
+        if active_event and total_registrations:
+            unique_checked_in = event_attendance.filter(check_type=CheckType.CHECK_IN).values('person_id').distinct().count()
+            attendance_progress = round(min(unique_checked_in / total_registrations, 1.0) * 100)
+
+        recent_scans = (
+            Attendance.objects.select_related('person', 'session', 'event')
+            .order_by('-created_at')[:6]
+        )
+
         ctx.update({
             'active_event': active_event,
             'total_registrations': total_registrations,
@@ -108,5 +141,30 @@ class DashboardHomeView(LoginRequiredMixin, TemplateView):
             'recent_registrations': recent_registrations,
             'upcoming_events': upcoming_events,
             'recent_activity': recent_activity,
+            'today_check_ins': today_check_ins,
+            'today_check_outs': today_check_outs,
+            'current_attendance': current_attendance,
+            'attendance_progress': attendance_progress,
+            'recent_scans': recent_scans,
         })
         return ctx
+
+
+@login_required(login_url='dashboard:login')
+def change_password(request):
+    forced = request.user.must_reset_password
+    if request.method == 'POST':
+        form = PasswordChangeForm(request.user, request.POST)
+        if form.is_valid():
+            user = form.save()
+            user.must_reset_password = False
+            user.save(update_fields=['must_reset_password'])
+            update_session_auth_hash(request, user)  # keep them logged in through the password change
+            AuditLog.objects.create(administrator=user, action='Changed own password', model_name='User', object_id=str(user.id))
+            messages.success(request, 'Password updated.')
+            return redirect('dashboard:home')
+    else:
+        form = PasswordChangeForm(request.user)
+    for field in form.fields.values():
+        field.widget.attrs.update({'class': 'field-input'})
+    return render(request, 'dashboard/change_password.html', {'form': form, 'forced': forced})

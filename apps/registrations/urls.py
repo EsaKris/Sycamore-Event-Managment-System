@@ -14,4 +14,10 @@ urlpatterns = [
     path('new/search/register-as-new/', views.register_as_new, name='register_as_new'),
     path('new/details/', views.details, name='details'),
     path('new/success/<int:pk>/', views.success, name='success'),
+
+    path('id-cards/', views.id_card_picker, name='id_cards'),
+    path('id-cards/bulk-download/', views.id_card_bulk_download, name='id_card_bulk_download'),
+    path('id-cards/<int:pk>/preview.png', views.id_card_preview, name='id_card_preview'),
+    path('id-cards/<int:pk>/download.pdf', views.id_card_download, name='id_card_download'),
+    path('id-cards/<int:pk>/badge-label/', views.id_card_set_badge_label, name='id_card_set_badge_label'),
 ]

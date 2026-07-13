@@ -55,8 +55,13 @@
     </div>
   </div>
 
-  <div class="alert alert-info" style="margin-top:22px">
-    ID card printing and QR check-in aren't wired up yet — they're coming in a later phase. Their permanent QR token has already been reserved: <code>{{ registration.person.qr_token }}</code>
+  <div class="qr-callout">
+    <img src="{% url 'people:qr_image' registration.person.person_id %}" alt="QR code for {{ registration.person.full_name }}" width="132" height="132">
+    <div>
+      <div class="card-title" style="margin-bottom:2px">Check-in QR code</div>
+      <div class="card-subtitle" style="margin-bottom:8px">This code is permanent — it never changes across years, even for future events. Scan it at any check-in session, or enter <strong style="color:var(--text-secondary)">{{ registration.person.person_id }}</strong> or their phone number manually.</div>
+      <a href="{% url 'attendance:scanner' %}?event={{ registration.event.id }}" class="btn btn-ghost" style="font-size:12px;padding:6px 12px">Go to scanner</a>
+    </div>
   </div>
 
   <div class="form-actions">

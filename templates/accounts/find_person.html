@@ -1,0 +1,73 @@
+{% extends 'dashboard/base.html' %}
+{% block title %}Make Administrator{% endblock %}
+{% block body %}
+<div class="app-shell">
+  {% include 'dashboard/partials/sidebar.html' %}
+  <div class="main-content">
+    {% include 'dashboard/partials/topbar.html' %}
+    <div class="content-inner">
+
+      <div class="page-header">
+        <div>
+          <div class="page-eyebrow"><a href="{% url 'accounts:list' %}" class="text-muted">Administrators</a> / Make Administrator</div>
+          <h1 class="page-title">Find a person</h1>
+          <div class="page-subtitle">Administrators are always created from an existing Person record — search for who you want to promote.</div>
+        </div>
+      </div>
+
+      {% include 'dashboard/partials/messages.html' %}
+
+      <div class="card" style="margin-bottom:18px">
+        <form method="get" style="display:flex;gap:10px">
+          {{ search_form.q }}
+          <button type="submit" class="btn btn-primary">Search</button>
+        </form>
+      </div>
+
+      {% if query %}
+        {% if people %}
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr><th>Person</th><th>Phone</th><th>Email</th><th></th></tr>
+              </thead>
+              <tbody>
+                {% for person in people %}
+                  <tr>
+                    <td>
+                      <div class="cell-main-row">
+                        <div class="avatar" style="width:28px;height:28px;font-size:11px">{{ person.first_name|slice:":1"|upper }}{{ person.last_name|slice:":1"|upper }}</div>
+                        <div>
+                          <div>{{ person.full_name }}</div>
+                          <div class="cell-sub">{{ person.person_id }}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td>{{ person.phone_number }}</td>
+                    <td>{{ person.email_address|default:"—" }}</td>
+                    <td style="text-align:right">
+                      {% if person.administrator_account %}
+                        <span class="badge-soon">already an admin</span>
+                      {% else %}
+                        <a href="{% url 'accounts:make_administrator' person.person_id %}" class="btn btn-primary" style="font-size:12px;padding:6px 12px">Make Administrator</a>
+                      {% endif %}
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <div class="card">
+            <div class="empty-state">
+              <div class="rings">{% include 'dashboard/partials/rings.html' with size=70 %}</div>
+              <p>No one matches "{{ query }}". They'll need to be registered as a Person first (via Registrations) before they can be made an administrator.</p>
+            </div>
+          </div>
+        {% endif %}
+      {% endif %}
+
+    </div>
+  </div>
+</div>
+{% endblock %}

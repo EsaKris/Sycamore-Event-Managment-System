@@ -268,3 +268,98 @@ class RegistrationDetailView(LoginRequiredMixin, DetailView):
 
     def get_queryset(self):
         return Registration.objects.select_related('person', 'event', 'department')
+
+
+# --------------------------------------------------------------------------
+# ID Card generation
+# --------------------------------------------------------------------------
+from . import idcards  # noqa: E402  (grouped separately — only this section needs it)
+
+
+@login_required(login_url='dashboard:login')
+def id_card_preview(request, pk):
+    """Inline PNG preview — used as an <img src> on the detail page and
+    the bulk-print picker, never as a download."""
+    registration = get_object_or_404(Registration.objects.select_related('person', 'event', 'department'), pk=pk)
+    return HttpResponse(idcards.render_card_png(registration), content_type='image/png')
+
+
+@login_required(login_url='dashboard:login')
+def id_card_download(request, pk):
+    registration = get_object_or_404(Registration.objects.select_related('person', 'event', 'department'), pk=pk)
+    pdf_bytes = idcards.render_card_pdf(registration)
+    AuditLog.objects.create(
+        administrator=request.user,
+        action=f"Downloaded ID card for {registration.person.full_name} ({registration.person.person_id})",
+        model_name='Registration', object_id=registration.id,
+        ip_address=getattr(request, 'client_ip', None),
+    )
+    response = HttpResponse(pdf_bytes, content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="{registration.person.person_id}-id-card.pdf"'
+    return response
+
+
+@login_required(login_url='dashboard:login')
+def id_card_picker(request):
+    """Event picker + checklist of registrations to bulk-print, per spec's
+    'Bulk Print' requirement. Mirrors the event-first pattern already used
+    by the attendance scanner."""
+    event_id = request.GET.get('event')
+    event = Event.objects.filter(pk=event_id).first() if event_id else None
+
+    registrations = []
+    if event:
+        registrations = (
+            Registration.objects.filter(event=event)
+            .select_related('person', 'department').order_by('person__last_name', 'person__first_name')
+        )
+
+    return render(request, 'registrations/id_cards.html', {
+        'events': Event.objects.order_by('-year'),
+        'event': event,
+        'registrations': registrations,
+    })
+
+
+@login_required(login_url='dashboard:login')
+def id_card_bulk_download(request):
+    """Accepts either specific registration ids (checkbox selection) or
+    an event id (print everyone) and streams back one multi-page PDF."""
+    ids = request.POST.getlist('registration_ids') or request.GET.getlist('registration_ids')
+    event_id = request.POST.get('event') or request.GET.get('event')
+
+    if ids:
+        registrations = Registration.objects.filter(pk__in=ids).select_related('person', 'event', 'department')
+    elif event_id:
+        registrations = Registration.objects.filter(event_id=event_id).select_related('person', 'event', 'department')
+    else:
+        messages.error(request, 'Select at least one registration to print.')
+        return redirect('registrations:id_cards')
+
+    if not registrations.exists():
+        messages.error(request, 'No matching registrations found to print.')
+        return redirect('registrations:id_cards')
+
+    pdf_bytes = idcards.render_cards_pdf(list(registrations))
+    AuditLog.objects.create(
+        administrator=request.user,
+        action=f"Bulk-downloaded {registrations.count()} ID card(s)",
+        model_name='Registration', object_id='',
+        ip_address=getattr(request, 'client_ip', None),
+    )
+    response = HttpResponse(pdf_bytes, content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="sems-id-cards.pdf"'
+    return response
+
+
+@login_required(login_url='dashboard:login')
+def id_card_set_badge_label(request, pk):
+    """Small inline control on the detail page for the VIP/Speaker/
+    Volunteer override mentioned in the spec's card-type list, without
+    needing a full edit form."""
+    registration = get_object_or_404(Registration, pk=pk)
+    if request.method == 'POST':
+        registration.badge_label = request.POST.get('badge_label', '').strip()
+        registration.save(update_fields=['badge_label'])
+        messages.success(request, 'Badge label updated.')
+    return redirect('registrations:detail', pk=pk)

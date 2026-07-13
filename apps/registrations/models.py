@@ -68,6 +68,12 @@ class Registration(TimeStampedModel):
     accommodation_requested = models.BooleanField(default=False)
     status = models.CharField(max_length=12, choices=RegistrationStatus.choices, default=RegistrationStatus.PENDING)
 
+    badge_label = models.CharField(
+        max_length=30, blank=True,
+        help_text="Overrides the category text printed on the ID card, e.g. 'VIP', 'Speaker', "
+                   "'Volunteer'. Leave blank to print the category/worker type as-is.",
+    )
+
     class Meta:
         ordering = ['-created_at']
         constraints = [
@@ -79,6 +85,17 @@ class Registration(TimeStampedModel):
 
     def __str__(self):
         return f"{self.person.full_name} - {self.event.title} ({self.registration_number})"
+
+    @property
+    def card_label(self) -> str:
+        """The text printed as the category badge on the ID card —
+        the manual badge_label override if set, otherwise the natural
+        category/worker-type text."""
+        if self.badge_label:
+            return self.badge_label
+        if self.worker_type:
+            return self.get_worker_type_display()
+        return self.get_category_display()
 
     def clean(self):
         if self.category == RegistrationCategory.WORKER and not self.worker_type:

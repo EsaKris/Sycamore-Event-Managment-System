@@ -1,0 +1,41 @@
+{% extends 'dashboard/base.html' %}
+{% block title %}Make Administrator{% endblock %}
+{% block body %}
+<div class="app-shell">
+  {% include 'dashboard/partials/sidebar.html' %}
+  <div class="main-content">
+    {% include 'dashboard/partials/topbar.html' %}
+    <div class="content-inner">
+
+      <div class="page-header">
+        <div>
+          <div class="page-eyebrow"><a href="{% url 'accounts:find_person' %}" class="text-muted">Administrators</a> / Assign role</div>
+          <h1 class="page-title">Make {{ person.full_name }} an administrator</h1>
+          <div class="page-subtitle">{{ person.person_id }} · {{ person.phone_number }}{% if person.email_address %} · {{ person.email_address }}{% endif %}</div>
+        </div>
+      </div>
+
+      <div class="card" style="max-width:480px">
+        <form method="post">
+          {% csrf_token %}
+          <div class="field-group">
+            <label class="field-label">Role</label>
+            {{ form.role }}
+            <div class="text-muted" style="font-size:12px;margin-top:6px">Super Administrator has unrestricted access, including creating other administrators.</div>
+          </div>
+
+          {% if not person.email_address %}
+            <div class="form-error-box">This person has no email on file — their username and temporary password will only be shown here once, so make sure to note them down.</div>
+          {% endif %}
+
+          <div class="form-actions">
+            <a href="{% url 'accounts:find_person' %}" class="btn btn-ghost">Cancel</a>
+            <button type="submit" class="btn btn-primary">Create login &amp; generate password</button>
+          </div>
+        </form>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}
