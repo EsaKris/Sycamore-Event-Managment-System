@@ -1,16 +1,16 @@
 from datetime import timedelta
 
+from django.contrib import messages
+from django.contrib.auth import update_session_auth_hash
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import LoginView, LogoutView
 from django.db.models import Count
+from django.http import JsonResponse
+from django.shortcuts import redirect, render
 from django.utils import timezone
 from django.views.generic import TemplateView
-
-from django.contrib.auth.decorators import login_required
-from django.contrib.auth.forms import PasswordChangeForm
-from django.contrib.auth import update_session_auth_hash
-from django.contrib import messages
-from django.shortcuts import redirect, render
 
 from apps.core.models import AuditLog
 from apps.departments.models import Department
@@ -18,8 +18,13 @@ from apps.events.models import Event, EventStatus
 from apps.people.models import Gender, Person
 from apps.registrations.models import Registration, RegistrationCategory, WorkerType
 from apps.attendance.models import Attendance, CheckType
+from apps.followup.models import FollowUp, FollowUpStatus
 
 from .forms import AdminLoginForm
+from .search import global_search
+from . import reports as reports_module
+from . import exports as exports_module
+from .analytics import build_analytics
 
 
 class AdminLoginView(LoginView):
@@ -121,6 +126,12 @@ class DashboardHomeView(LoginRequiredMixin, TemplateView):
             .order_by('-created_at')[:6]
         )
 
+        # ---- Follow-up ----
+        pending_followups = FollowUp.objects.filter(status=FollowUpStatus.OPEN).count()
+        overdue_followups = FollowUp.objects.filter(
+            status=FollowUpStatus.OPEN, next_follow_up_date__lt=today,
+        ).count()
+
         ctx.update({
             'active_event': active_event,
             'total_registrations': total_registrations,
@@ -146,6 +157,8 @@ class DashboardHomeView(LoginRequiredMixin, TemplateView):
             'current_attendance': current_attendance,
             'attendance_progress': attendance_progress,
             'recent_scans': recent_scans,
+            'pending_followups': pending_followups,
+            'overdue_followups': overdue_followups,
         })
         return ctx
 
@@ -168,3 +181,92 @@ def change_password(request):
     for field in form.fields.values():
         field.widget.attrs.update({'class': 'field-input'})
     return render(request, 'dashboard/change_password.html', {'form': form, 'forced': forced})
+
+
+@login_required(login_url='dashboard:login')
+def search_api(request):
+    """Powers the topbar's live dropdown (fetch-as-you-type)."""
+    query = request.GET.get('q', '')
+    groups = global_search(query, user=request.user)
+    return JsonResponse({
+        'query': query,
+        'groups': [
+            {
+                'label': g.label,
+                'results': [
+                    {'title': r.title, 'subtitle': r.subtitle, 'url': r.url, 'icon': r.icon}
+                    for r in g.results
+                ],
+            }
+            for g in groups
+        ],
+    })
+
+
+@login_required(login_url='dashboard:login')
+def search_page(request):
+    """Full results page — reached by pressing Enter, or used directly
+    when JavaScript is unavailable."""
+    query = request.GET.get('q', '')
+    groups = global_search(query, user=request.user)
+    return render(request, 'dashboard/search.html', {'query': query, 'groups': groups})
+
+
+@login_required(login_url='dashboard:login')
+def reports_index(request):
+    report_key = request.GET.get('report', 'registrations')
+    event_id = request.GET.get('event', '')
+    event = Event.objects.filter(pk=event_id).first() if event_id else None
+
+    spec = reports_module.REPORT_TYPES.get(report_key)
+    columns, rows = reports_module.get_report_rows(report_key, event=event)
+
+    return render(request, 'dashboard/reports.html', {
+        'report_types': reports_module.REPORT_TYPES,
+        'selected_report': report_key,
+        'selected_report_label': spec['label'] if spec else '',
+        'event_scoped': spec['event_scoped'] if spec else False,
+        'events': Event.objects.order_by('-year'),
+        'selected_event': event,
+        'columns': columns,
+        'rows': rows[:100],  # preview only — full data goes through export
+        'total_rows': len(rows),
+        'export_formats': [('csv', 'CSV'), ('xlsx', 'Excel'), ('pdf', 'PDF')],
+    })
+
+
+@login_required(login_url='dashboard:login')
+def report_export(request):
+    report_key = request.GET.get('report', 'registrations')
+    fmt = request.GET.get('format', 'csv')
+    event_id = request.GET.get('event', '')
+    event = Event.objects.filter(pk=event_id).first() if event_id else None
+
+    spec = reports_module.REPORT_TYPES.get(report_key)
+    if not spec or fmt not in exports_module.EXPORTERS:
+        messages.error(request, 'Unknown report or export format.')
+        return redirect('dashboard:reports')
+
+    columns, rows = reports_module.get_report_rows(report_key, event=event)
+    title = f"{spec['label']}{' - ' + event.title if event else ''}".replace(' ', '_')
+
+    AuditLog.objects.create(
+        administrator=request.user,
+        action=f"Exported '{spec['label']}' report as {fmt.upper()} ({len(rows)} rows)",
+        model_name='Report', object_id='',
+        ip_address=getattr(request, 'client_ip', None),
+    )
+    return exports_module.EXPORTERS[fmt](title, columns, rows)
+
+
+@login_required(login_url='dashboard:login')
+def analytics_view(request):
+    event_id = request.GET.get('event', '')
+    event = Event.objects.filter(pk=event_id).first() if event_id else None
+    data = build_analytics(event=event)
+
+    return render(request, 'dashboard/analytics.html', {
+        'events': Event.objects.order_by('-year'),
+        'selected_event': event,
+        'analytics': data,
+    })

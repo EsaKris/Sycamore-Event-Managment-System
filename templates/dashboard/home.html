@@ -76,6 +76,15 @@
           <div class="stat-label">Today's Check-outs</div>
           <div class="stat-value">{{ today_check_outs }}</div>
         </div>
+        <div class="card stat-card">
+          <div class="stat-label">Pending Follow-ups</div>
+          <div class="stat-value">{{ pending_followups }}</div>
+        </div>
+        <div class="card stat-card">
+          <div class="stat-label">Overdue Follow-ups</div>
+          <div class="stat-value">{{ overdue_followups }}</div>
+          {% if overdue_followups %}<div class="stat-delta" style="color:var(--negative)">needs attention</div>{% endif %}
+        </div>
       </div>
 
       {% if registration_progress != None or attendance_progress != None %}
@@ -160,7 +169,7 @@
                 <div class="qa-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg></div>
                 <div class="qa-title">New Registration</div>
               </a>
-              <a href="#" class="quick-action">
+              <a href="{% url 'followup:find_person' %}" class="quick-action">
                 <div class="qa-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg></div>
                 <div class="qa-title">Find a Person</div>
               </a>

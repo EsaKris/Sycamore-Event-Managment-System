@@ -19,6 +19,7 @@ RegistrationService, when that step is submitted.
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.generic import DetailView, ListView
 
@@ -228,6 +229,7 @@ class RegistrationListView(LoginRequiredMixin, ListView):
         event_id = self.request.GET.get('event', '')
         category = self.request.GET.get('category', '')
         status = self.request.GET.get('status', '')
+        department_id = self.request.GET.get('department', '')
 
         if q:
             from django.db.models import Q
@@ -244,6 +246,8 @@ class RegistrationListView(LoginRequiredMixin, ListView):
             qs = qs.filter(category=category)
         if status:
             qs = qs.filter(status=status)
+        if department_id:
+            qs = qs.filter(department_id=department_id)
         return qs
 
     def get_context_data(self, **kwargs):
@@ -255,6 +259,7 @@ class RegistrationListView(LoginRequiredMixin, ListView):
             'selected_event': self.request.GET.get('event', ''),
             'selected_category': self.request.GET.get('category', ''),
             'selected_status': self.request.GET.get('status', ''),
+            'selected_department': self.request.GET.get('department', ''),
             'total_count': self.get_queryset().count(),
         })
         return ctx

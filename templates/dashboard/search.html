@@ -1,0 +1,63 @@
+{% extends 'dashboard/base.html' %}
+{% block title %}Search{% endblock %}
+{% block body %}
+<div class="app-shell">
+  {% include 'dashboard/partials/sidebar.html' %}
+  <div class="main-content">
+    {% include 'dashboard/partials/topbar.html' %}
+    <div class="content-inner">
+
+      <div class="page-header">
+        <div>
+          <div class="page-eyebrow">Search</div>
+          <h1 class="page-title">{% if query %}Results for "{{ query }}"{% else %}Search{% endif %}</h1>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:18px;max-width:480px">
+        <form method="get" style="display:flex;gap:10px">
+          <input type="text" name="q" value="{{ query }}" class="field-input" placeholder="Search people, registrations, events…" autofocus>
+          <button type="submit" class="btn btn-primary">Search</button>
+        </form>
+      </div>
+
+      {% if not query %}
+        <div class="card">
+          <div class="empty-state">
+            <div class="rings">{% include 'dashboard/partials/rings.html' with size=70 %}</div>
+            <p>Search by name, phone, email, Person ID, registration number, event, or department.</p>
+          </div>
+        </div>
+      {% elif not groups %}
+        <div class="card">
+          <div class="empty-state">
+            <div class="rings">{% include 'dashboard/partials/rings.html' with size=70 %}</div>
+            <p>No matches for "{{ query }}".</p>
+          </div>
+        </div>
+      {% else %}
+        <div class="grid-2col">
+          {% for group in groups %}
+            <div class="card">
+              <div class="card-title">{{ group.label }}</div>
+              <div class="row-list">
+                {% for r in group.results %}
+                  <a href="{{ r.url }}" class="row-item" style="text-decoration:none;color:inherit">
+                    <div class="row-item-main">
+                      <div style="min-width:0">
+                        <div class="row-item-title">{{ r.title }}</div>
+                        <div class="row-item-sub">{{ r.subtitle }}</div>
+                      </div>
+                    </div>
+                  </a>
+                {% endfor %}
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+    </div>
+  </div>
+</div>
+{% endblock %}

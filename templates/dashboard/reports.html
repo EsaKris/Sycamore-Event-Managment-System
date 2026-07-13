@@ -1,0 +1,88 @@
+{% extends 'dashboard/base.html' %}
+{% load dashboard_extras %}
+{% block title %}Reports{% endblock %}
+{% block body %}
+<div class="app-shell">
+  {% include 'dashboard/partials/sidebar.html' %}
+  <div class="main-content">
+    {% include 'dashboard/partials/topbar.html' %}
+    <div class="content-inner">
+
+      <div class="page-header">
+        <div>
+          <div class="page-eyebrow">Insights</div>
+          <h1 class="page-title">Reports</h1>
+          <div class="page-subtitle">{{ total_rows }} row{{ total_rows|pluralize }} · previewing the first {{ rows|length }}</div>
+        </div>
+      </div>
+
+      {% include 'dashboard/partials/messages.html' %}
+
+      <div class="card" style="margin-bottom:18px">
+        <form method="get" style="display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap">
+          <div style="flex:1;min-width:220px">
+            <label class="field-label">Report</label>
+            <select name="report" class="field-input field-select" onchange="this.form.submit()">
+              {% for key, spec in report_types.items %}
+                <option value="{{ key }}" {% if key == selected_report %}selected{% endif %}>{{ spec.label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          {% if event_scoped %}
+          <div style="flex:1;min-width:220px">
+            <label class="field-label">Event</label>
+            <select name="event" class="field-input field-select" onchange="this.form.submit()">
+              <option value="">All events</option>
+              {% for ev in events %}
+                <option value="{{ ev.id }}" {% if selected_event.id == ev.id %}selected{% endif %}>{{ ev.title }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          {% endif %}
+          <button type="submit" class="btn btn-ghost">Refresh</button>
+        </form>
+      </div>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <div class="card-title" style="margin:0">{{ selected_report_label }}</div>
+        <div style="display:flex;gap:8px">
+          {% for fmt, fmt_label in export_formats %}
+            <a href="{% url 'dashboard:report_export' %}?report={{ selected_report }}&format={{ fmt }}{% if selected_event %}&event={{ selected_event.id }}{% endif %}" class="btn btn-ghost" style="font-size:12px;padding:7px 12px">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>
+              {{ fmt_label }}
+            </a>
+          {% endfor %}
+        </div>
+      </div>
+
+      {% if rows %}
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>{% for col in columns %}<th>{{ col }}</th>{% endfor %}</tr>
+            </thead>
+            <tbody>
+              {% for row in rows %}
+                <tr>{% for col in columns %}<td>{{ row|get_item:col }}</td>{% endfor %}</tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% if total_rows > rows|length %}
+          <div class="text-muted" style="font-size:12px;margin-top:10px">
+            Showing {{ rows|length }} of {{ total_rows }} rows. Export to see the full dataset.
+          </div>
+        {% endif %}
+      {% else %}
+        <div class="card">
+          <div class="empty-state">
+            <div class="rings">{% include 'dashboard/partials/rings.html' with size=70 %}</div>
+            <p>No data for this report yet.</p>
+          </div>
+        </div>
+      {% endif %}
+
+    </div>
+  </div>
+</div>
+{% endblock %}

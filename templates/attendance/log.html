@@ -76,7 +76,7 @@
                   <td>{{ a.event.title }}</td>
                   <td>{{ a.session.label }}<div class="cell-sub">{{ a.session.date|date:"M j, Y" }}</div></td>
                   <td><span class="pill {% if a.check_type == 'check_in' %}pill-participant{% else %}pill-worker{% endif %}">{{ a.get_check_type_display }}</span></td>
-                  <td>{{ a.scanned_by.get_full_name|default:a.scanned_by.username|default:"—" }}</td>
+                  <td>{% if a.scanned_by %}{{ a.scanned_by.get_full_name|default:a.scanned_by.username }}{% else %}—{% endif %}</td>
                   <td>{{ a.created_at|date:"M j, Y" }}<div class="cell-sub">{{ a.created_at|time:"g:i A" }}</div></td>
                 </tr>
               {% endfor %}

@@ -1,0 +1,50 @@
+{% extends 'dashboard/base.html' %}
+{% block title %}Find a Person{% endblock %}
+{% block body %}
+<div class="app-shell">
+  {% include 'dashboard/partials/sidebar.html' %}
+  <div class="main-content">
+    {% include 'dashboard/partials/topbar.html' %}
+    <div class="content-inner">
+      <div class="wizard-shell">
+        {% include 'dashboard/partials/messages.html' %}
+
+        <div class="card wizard-card">
+          <div class="wizard-header">
+            <div class="wizard-eyebrow">Follow-up</div>
+            <h1 class="wizard-title">Find a person</h1>
+            <div class="wizard-subtitle">Look them up to view or add to their follow-up timeline.</div>
+          </div>
+
+          <form method="post" novalidate>
+            {% csrf_token %}
+            {% if form.non_field_errors %}
+              <div class="alert alert-error">{{ form.non_field_errors.0 }}</div>
+            {% endif %}
+            <div class="field-group">
+              <label class="field-label" for="{{ form.identifier.id_for_label }}">{{ form.identifier.label }}</label>
+              {{ form.identifier }}
+              {% if form.identifier.errors %}<div class="field-error">{{ form.identifier.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="form-actions" style="justify-content:flex-end">
+              <button type="submit" class="btn btn-primary">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>
+                Search
+              </button>
+            </div>
+          </form>
+
+          {% if searched and not result %}
+            <div style="margin-top:20px;padding-top:20px;border-top:1px solid var(--border-subtle)">
+              <div class="empty-state">
+                <div class="rings">{% include 'dashboard/partials/rings.html' with size=70 %}</div>
+                <p>No matching person found. Double-check the details — if they've never registered before, they won't have a record yet.</p>
+              </div>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

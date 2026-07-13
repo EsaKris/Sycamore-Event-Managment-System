@@ -1,0 +1,125 @@
+{% extends 'dashboard/base.html' %}
+{% block title %}{% if instance %}Edit Campaign{% else %}New Campaign{% endif %}{% endblock %}
+{% block body %}
+<div class="app-shell">
+  {% include 'dashboard/partials/sidebar.html' %}
+  <div class="main-content">
+    {% include 'dashboard/partials/topbar.html' %}
+    <div class="content-inner">
+
+      <div class="page-header">
+        <div>
+          <div class="page-eyebrow"><a href="{% url 'campaigns:list' %}" class="text-muted">Email Campaigns</a></div>
+          <h1 class="page-title">{% if instance %}Edit campaign{% else %}New campaign{% endif %}</h1>
+        </div>
+      </div>
+
+      {% include 'dashboard/partials/messages.html' %}
+
+      <div class="grid-2col">
+        <div class="card">
+          <form method="post" novalidate>
+            {% csrf_token %}
+
+            <div class="form-section">
+              <div class="form-section-title"><span class="num">1</span> Campaign</div>
+              <div class="field-group">
+                <label class="field-label" for="{{ form.name.id_for_label }}">Name<span class="field-required">*</span></label>
+                {{ form.name }}
+                {% if form.name.errors %}<div class="field-error">{{ form.name.errors.0 }}</div>{% endif %}
+              </div>
+              <div class="field-group">
+                <label class="field-label" for="{{ form.template.id_for_label }}">Email template<span class="field-required">*</span></label>
+                {{ form.template }}
+                {% if form.template.errors %}<div class="field-error">{{ form.template.errors.0 }}</div>{% endif %}
+              </div>
+            </div>
+
+            <div class="form-section">
+              <div class="form-section-title"><span class="num">2</span> Audience</div>
+              <div class="form-section-subtitle">Leave any field on its default to skip filtering by it — an empty campaign form targets everyone.</div>
+
+              <div class="form-grid">
+                <div class="field-group">
+                  <label class="field-label" for="{{ form.event.id_for_label }}">Event</label>
+                  {{ form.event }}
+                </div>
+                <div class="field-group">
+                  <label class="field-label" for="{{ form.target_category.id_for_label }}">Category</label>
+                  {{ form.target_category }}
+                </div>
+                <div class="field-group">
+                  <label class="field-label" for="{{ form.target_worker_type.id_for_label }}">Worker type</label>
+                  {{ form.target_worker_type }}
+                </div>
+                <div class="field-group">
+                  <label class="field-label" for="{{ form.target_department.id_for_label }}">Department</label>
+                  {{ form.target_department }}
+                </div>
+                <div class="field-group">
+                  <label class="field-label" for="{{ form.target_state.id_for_label }}">State</label>
+                  {{ form.target_state }}
+                </div>
+                <div class="field-group">
+                  <label class="field-label" for="{{ form.target_country.id_for_label }}">Country</label>
+                  {{ form.target_country }}
+                </div>
+                <div class="field-group span-2">
+                  <label class="field-label" for="{{ form.target_church_name.id_for_label }}">Church name contains</label>
+                  {{ form.target_church_name }}
+                </div>
+                <div class="field-group span-2">
+                  <label class="field-label" for="{{ form.target_returning.id_for_label }}">Returning status</label>
+                  {{ form.target_returning }}
+                </div>
+              </div>
+            </div>
+
+            <div class="form-section">
+              <div class="form-section-title"><span class="num">3</span> Scheduling</div>
+              <div class="field-group">
+                <label class="field-label" for="{{ form.scheduled_at.id_for_label }}">Send at (optional)</label>
+                {{ form.scheduled_at }}
+                <div class="field-hint">Leave blank to send manually with "Send Now" from the campaign page. Set a time here to queue it — requires the <code>send_due_campaigns</code> management command to be run periodically.</div>
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <a href="{% url 'campaigns:list' %}" class="btn btn-ghost">Cancel</a>
+              <button type="submit" class="btn btn-primary">
+                {% if instance %}Save changes{% else %}Create campaign{% endif %}
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:18px">
+          <div class="card">
+            <div class="card-title">Segment size</div>
+            {% if preview_count is not None %}
+              <div class="segment-summary">
+                <strong>{{ preview_count }}</strong> {{ preview_count|pluralize:"person,people" }} currently match this segment.
+              </div>
+              <form method="post" action="{% url 'campaigns:sync' instance.pk %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-ghost" style="width:100%;justify-content:center">Refresh recipient list</button>
+              </form>
+            {% else %}
+              <div class="card-subtitle">Save the campaign to see how many people currently match this segment.</div>
+            {% endif %}
+          </div>
+          <div class="card">
+            <div class="card-title">How targeting works</div>
+            <div class="card-subtitle" style="margin-bottom:0">
+              Every filter narrows the audience — Event, Category, Worker Type, Department, State, Country,
+              Church, and Returning Status all apply together (AND, not OR). People without an email address
+              on file are automatically excluded.
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

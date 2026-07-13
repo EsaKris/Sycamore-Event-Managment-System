@@ -1,0 +1,86 @@
+{% extends 'dashboard/base.html' %}
+{% block title %}{% if instance %}Edit Template{% else %}New Template{% endif %}{% endblock %}
+{% block body %}
+<div class="app-shell">
+  {% include 'dashboard/partials/sidebar.html' %}
+  <div class="main-content">
+    {% include 'dashboard/partials/topbar.html' %}
+    <div class="content-inner">
+
+      <div class="page-header">
+        <div>
+          <div class="page-eyebrow"><a href="{% url 'campaigns:templates' %}" class="text-muted">Email Templates</a></div>
+          <h1 class="page-title">{% if instance %}Edit template{% else %}New template{% endif %}</h1>
+        </div>
+      </div>
+
+      {% include 'dashboard/partials/messages.html' %}
+
+      <div class="card" style="max-width:760px">
+        <form method="post" novalidate>
+          {% csrf_token %}
+
+          <div class="form-grid">
+            <div class="field-group">
+              <label class="field-label" for="{{ form.name.id_for_label }}">Name<span class="field-required">*</span></label>
+              {{ form.name }}
+              {% if form.name.errors %}<div class="field-error">{{ form.name.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="field-group">
+              <label class="field-label" for="{{ form.template_type.id_for_label }}">Type</label>
+              {{ form.template_type }}
+            </div>
+          </div>
+
+          <div class="field-group">
+            <label class="field-label" for="{{ form.subject.id_for_label }}">Subject<span class="field-required">*</span></label>
+            {{ form.subject }}
+            {% if form.subject.errors %}<div class="field-error">{{ form.subject.errors.0 }}</div>{% endif %}
+          </div>
+
+          <div class="field-group">
+            <label class="field-label" for="{{ form.body.id_for_label }}">Body<span class="field-required">*</span></label>
+            {{ form.body }}
+            {% if form.body.errors %}<div class="field-error">{{ form.body.errors.0 }}</div>{% endif %}
+            <div class="field-hint">Click a placeholder to insert it at the cursor. Rendered with Django's template engine, so {% templatetag openbrace %}% if %{% templatetag closebrace %} / {% templatetag openbrace %}% for %{% templatetag closebrace %} also work if needed.</div>
+            <div class="template-legend" style="margin-top:8px" id="placeholder-legend">
+              {% for ph in placeholders %}<code data-insert="{{ ph }}">{{ ph }}</code>{% endfor %}
+            </div>
+          </div>
+
+          <div class="field-group">
+            <label class="radio-card" style="display:inline-flex">
+              {{ form.is_active }}
+              <div><div class="rc-title">Active</div><div class="rc-sub">Only active templates are selectable when building a campaign</div></div>
+            </label>
+          </div>
+
+          <div class="form-actions">
+            <a href="{% url 'campaigns:templates' %}" class="btn btn-ghost">Cancel</a>
+            <button type="submit" class="btn btn-primary">Save template</button>
+          </div>
+        </form>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  document.getElementById('placeholder-legend').addEventListener('click', function (e) {
+    var chip = e.target.closest('code[data-insert]');
+    if (!chip) return;
+    var textarea = document.getElementById('{{ form.body.id_for_label }}');
+    var subject = document.getElementById('{{ form.subject.id_for_label }}');
+    var target = (document.activeElement === subject) ? subject : textarea;
+    var start = target.selectionStart || target.value.length;
+    var end = target.selectionEnd || target.value.length;
+    var text = chip.getAttribute('data-insert');
+    target.value = target.value.slice(0, start) + text + target.value.slice(end);
+    target.focus();
+    target.selectionStart = target.selectionEnd = start + text.length;
+  });
+</script>
+{% endblock %}

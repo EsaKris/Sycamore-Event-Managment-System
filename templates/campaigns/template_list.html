@@ -1,0 +1,73 @@
+{% extends 'dashboard/base.html' %}
+{% block title %}Email Templates{% endblock %}
+{% block body %}
+<div class="app-shell">
+  {% include 'dashboard/partials/sidebar.html' %}
+  <div class="main-content">
+    {% include 'dashboard/partials/topbar.html' %}
+    <div class="content-inner">
+
+      <div class="page-header">
+        <div>
+          <div class="page-eyebrow"><a href="{% url 'campaigns:list' %}" class="text-muted">Email Campaigns</a> / Templates</div>
+          <h1 class="page-title">Email templates</h1>
+          <div class="page-subtitle">Reusable subject/body pairs — Welcome, Reminder, Thank You, and more</div>
+        </div>
+        <a href="{% url 'campaigns:template_create' %}" class="btn btn-primary">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>
+          New Template
+        </a>
+      </div>
+
+      {% include 'dashboard/partials/messages.html' %}
+
+      {% if templates %}
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Subject</th>
+                <th>Status</th>
+                <th>Updated</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for tpl in templates %}
+                <tr onclick="window.location='{% url 'campaigns:template_edit' tpl.pk %}'" style="cursor:pointer">
+                  <td>{{ tpl.name }}</td>
+                  <td>{{ tpl.get_template_type_display }}</td>
+                  <td class="cell-sub">{{ tpl.subject }}</td>
+                  <td><span class="pill {% if tpl.is_active %}pill-confirmed{% else %}pill-cancelled{% endif %}">{{ tpl.is_active|yesno:"Active,Inactive" }}</span></td>
+                  <td>{{ tpl.updated_at|timesince }} ago</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        {% if is_paginated %}
+          <div class="pagination">
+            <div>Page {{ page_obj.number }} of {{ paginator.num_pages }}</div>
+            <div class="pagination-links">
+              {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}">Prev</a>{% endif %}
+              <span class="is-current">{{ page_obj.number }}</span>
+              {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}">Next</a>{% endif %}
+            </div>
+          </div>
+        {% endif %}
+      {% else %}
+        <div class="card">
+          <div class="empty-state">
+            <div class="rings">{% include 'dashboard/partials/rings.html' with size=70 %}</div>
+            <p>No templates yet — create one to start building campaigns.</p>
+            <a href="{% url 'campaigns:template_create' %}" class="btn btn-primary" style="margin-top:14px">New Template</a>
+          </div>
+        </div>
+      {% endif %}
+
+    </div>
+  </div>
+</div>
+{% endblock %}

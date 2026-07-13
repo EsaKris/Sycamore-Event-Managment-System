@@ -1,0 +1,86 @@
+{% extends 'dashboard/base.html' %}
+{% block title %}Email Campaigns{% endblock %}
+{% block body %}
+<div class="app-shell">
+  {% include 'dashboard/partials/sidebar.html' %}
+  <div class="main-content">
+    {% include 'dashboard/partials/topbar.html' %}
+    <div class="content-inner">
+
+      <div class="page-header">
+        <div>
+          <div class="page-eyebrow">Email Campaigns</div>
+          <h1 class="page-title">Campaigns</h1>
+          <div class="page-subtitle">Bulk sends, segmented by event, category, department, location, or church</div>
+        </div>
+        <div style="display:flex;gap:10px">
+          <a href="{% url 'campaigns:templates' %}" class="btn btn-ghost">Templates</a>
+          <a href="{% url 'campaigns:create' %}" class="btn btn-primary">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>
+            New Campaign
+          </a>
+        </div>
+      </div>
+
+      {% include 'dashboard/partials/messages.html' %}
+
+      {% if campaigns %}
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Campaign</th>
+                <th>Template</th>
+                <th>Event</th>
+                <th>Recipients</th>
+                <th>Status</th>
+                <th>Scheduled</th>
+                <th>Sent</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for c in campaigns %}
+                <tr onclick="window.location='{% url 'campaigns:detail' c.pk %}'" style="cursor:pointer">
+                  <td>{{ c.name }}</td>
+                  <td class="cell-sub">{{ c.template.name }}</td>
+                  <td>{{ c.event.title|default:"All events" }}</td>
+                  <td>{{ c.recipient_count }}</td>
+                  <td>
+                    <span class="pill
+                      {% if c.status == 'sent' %}pill-confirmed
+                      {% elif c.status == 'failed' %}pill-cancelled
+                      {% elif c.status == 'sending' %}pill-worker
+                      {% else %}pill-pending{% endif %}">{{ c.get_status_display }}</span>
+                  </td>
+                  <td>{{ c.scheduled_at|date:"M j, Y g:i A"|default:"—" }}</td>
+                  <td>{{ c.sent_at|date:"M j, Y g:i A"|default:"—" }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        {% if is_paginated %}
+          <div class="pagination">
+            <div>Page {{ page_obj.number }} of {{ paginator.num_pages }}</div>
+            <div class="pagination-links">
+              {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}">Prev</a>{% endif %}
+              <span class="is-current">{{ page_obj.number }}</span>
+              {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}">Next</a>{% endif %}
+            </div>
+          </div>
+        {% endif %}
+      {% else %}
+        <div class="card">
+          <div class="empty-state">
+            <div class="rings">{% include 'dashboard/partials/rings.html' with size=70 %}</div>
+            <p>No campaigns yet.</p>
+            <a href="{% url 'campaigns:create' %}" class="btn btn-primary" style="margin-top:14px">New Campaign</a>
+          </div>
+        </div>
+      {% endif %}
+
+    </div>
+  </div>
+</div>
+{% endblock %}

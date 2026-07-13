@@ -1,0 +1,104 @@
+{% extends 'dashboard/base.html' %}
+{% block title %}{{ campaign.name }}{% endblock %}
+{% block body %}
+<div class="app-shell">
+  {% include 'dashboard/partials/sidebar.html' %}
+  <div class="main-content">
+    {% include 'dashboard/partials/topbar.html' %}
+    <div class="content-inner">
+
+      <div class="page-header">
+        <div>
+          <div class="page-eyebrow"><a href="{% url 'campaigns:list' %}" class="text-muted">Email Campaigns</a> / {{ campaign.name }}</div>
+          <h1 class="page-title">{{ campaign.name }}</h1>
+          <div class="page-subtitle">{{ campaign.template.name }} · {{ campaign.event.title|default:"All events" }}</div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center">
+          <span class="pill
+            {% if campaign.status == 'sent' %}pill-confirmed
+            {% elif campaign.status == 'failed' %}pill-cancelled
+            {% elif campaign.status == 'sending' %}pill-worker
+            {% else %}pill-pending{% endif %}" style="font-size:12px;padding:6px 12px">{{ campaign.get_status_display }}</span>
+          {% if not campaign.is_locked %}
+            <a href="{% url 'campaigns:edit' campaign.pk %}" class="btn btn-ghost">Edit</a>
+          {% endif %}
+        </div>
+      </div>
+
+      {% include 'dashboard/partials/messages.html' %}
+
+      <div class="stat-mini-row">
+        <div class="stat-mini"><div class="n">{{ counts.total }}</div><div class="l">Recipients</div></div>
+        <div class="stat-mini"><div class="n text-positive">{{ counts.sent }}</div><div class="l">Sent</div></div>
+        <div class="stat-mini"><div class="n text-accent">{{ counts.opened }}</div><div class="l">Opened</div></div>
+        <div class="stat-mini"><div class="n">{{ counts.failed }}</div><div class="l">Failed</div></div>
+        <div class="stat-mini"><div class="n">{{ counts.pending }}</div><div class="l">Pending</div></div>
+      </div>
+
+      {% if not campaign.is_locked %}
+        <div class="card" style="margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
+          <div>
+            <div class="card-title" style="margin-bottom:0">Ready to send?</div>
+            <div class="card-subtitle" style="margin-bottom:0">
+              {% if campaign.scheduled_at %}Scheduled for {{ campaign.scheduled_at|date:"M j, Y g:i A" }} — or send immediately below.{% else %}This will send to all {{ counts.total }} pending recipient{{ counts.total|pluralize }} right now, synchronously.{% endif %}
+            </div>
+          </div>
+          <div style="display:flex;gap:10px">
+            <form method="post" action="{% url 'campaigns:sync' campaign.pk %}">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-ghost">Refresh recipients</button>
+            </form>
+            <form method="post" action="{% url 'campaigns:send' campaign.pk %}" onsubmit="return confirm('Send this campaign to {{ counts.total }} recipient{{ counts.total|pluralize }} now?');">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-primary">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+                Send Now
+              </button>
+            </form>
+          </div>
+        </div>
+      {% endif %}
+
+      <div class="card-title" style="margin-bottom:4px">Recipients</div>
+      <div class="card-subtitle">{% if counts.total > 200 %}Showing first 200 of {{ counts.total }}.{% endif %}</div>
+
+      {% if recipients %}
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Person</th>
+                <th>Email</th>
+                <th>Status</th>
+                <th>Sent</th>
+                <th>Opened</th>
+                <th>Error</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for r in recipients %}
+                <tr>
+                  <td>{{ r.person.full_name }}<div class="cell-sub">{{ r.person.person_id }}</div></td>
+                  <td>{{ r.email_address }}</td>
+                  <td><span class="recipient-status-dot {{ r.status }}"></span>{{ r.get_status_display }}</td>
+                  <td>{{ r.sent_at|date:"M j, g:i A"|default:"—" }}</td>
+                  <td>{{ r.opened_at|date:"M j, g:i A"|default:"—" }}</td>
+                  <td class="cell-sub">{{ r.error_message|default:"—" }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="card">
+          <div class="empty-state">
+            <div class="rings">{% include 'dashboard/partials/rings.html' with size=70 %}</div>
+            <p>No recipients match this segment yet.</p>
+          </div>
+        </div>
+      {% endif %}
+
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,123 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+{% block title %}Analytics{% endblock %}
+{% block body %}
+<div class="app-shell">
+  {% include 'dashboard/partials/sidebar.html' %}
+  <div class="main-content">
+    {% include 'dashboard/partials/topbar.html' %}
+    <div class="content-inner">
+
+      <div class="page-header">
+        <div>
+          <div class="page-eyebrow">Insights</div>
+          <h1 class="page-title">Analytics</h1>
+          <div class="page-subtitle">{% if selected_event %}{{ selected_event.title }}{% else %}Across all events{% endif %}</div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:18px">
+        <form method="get" style="display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap">
+          <div style="flex:1;min-width:220px">
+            <label class="field-label">Event</label>
+            <select name="event" class="field-input field-select" onchange="this.form.submit()">
+              <option value="">All events</option>
+              {% for ev in events %}
+                <option value="{{ ev.id }}" {% if selected_event.id == ev.id %}selected{% endif %}>{{ ev.title }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <button type="submit" class="btn btn-ghost">Refresh</button>
+        </form>
+      </div>
+
+      <div class="stat-grid">
+        <div class="card stat-card">
+          <div class="stat-label">Registrations</div>
+          <div class="stat-value">{{ analytics.totals.registrations }}</div>
+        </div>
+        <div class="card stat-card">
+          <div class="stat-label">Unique People</div>
+          <div class="stat-value">{{ analytics.totals.people }}</div>
+        </div>
+        <div class="card stat-card">
+          <div class="stat-label">Attendance Scans</div>
+          <div class="stat-value">{{ analytics.totals.attendance_scans }}</div>
+        </div>
+        <div class="card stat-card">
+          <div class="stat-label">Campaigns Sent</div>
+          <div class="stat-value">{{ analytics.totals.campaigns_sent }}</div>
+        </div>
+      </div>
+
+      <div class="grid-2col">
+        <div class="card">
+          <div class="card-title">Registration trend</div>
+          <div class="card-subtitle">Last 30 days</div>
+          <canvas id="chart-registration-trend" height="140"></canvas>
+        </div>
+        <div class="card">
+          <div class="card-title">Attendance trend</div>
+          <div class="card-subtitle">Check-ins, last 30 days</div>
+          <canvas id="chart-attendance-trend" height="140"></canvas>
+        </div>
+      </div>
+
+      <div class="grid-2col" style="margin-top:18px">
+        <div class="card">
+          <div class="card-title">Gender</div>
+          <canvas id="chart-gender" height="180"></canvas>
+        </div>
+        <div class="card">
+          <div class="card-title">Returning vs first-time</div>
+          <canvas id="chart-returning" height="180"></canvas>
+        </div>
+      </div>
+
+      <div class="grid-2col" style="margin-top:18px">
+        <div class="card">
+          <div class="card-title">Age distribution</div>
+          <canvas id="chart-age" height="180"></canvas>
+        </div>
+        <div class="card">
+          <div class="card-title">Top departments</div>
+          <canvas id="chart-departments" height="180"></canvas>
+        </div>
+      </div>
+
+      <div class="grid-2col" style="margin-top:18px">
+        <div class="card">
+          <div class="card-title">Top states</div>
+          <canvas id="chart-states" height="200"></canvas>
+        </div>
+        <div class="card">
+          <div class="card-title">Top countries</div>
+          <canvas id="chart-countries" height="200"></canvas>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:18px">
+        <div class="card-title">Email campaign performance</div>
+        <div class="card-subtitle">Last 5 campaigns</div>
+        <canvas id="chart-campaigns" height="120"></canvas>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+{{ analytics.registration_trend|json_script:"data-registration-trend" }}
+{{ analytics.attendance_trend|json_script:"data-attendance-trend" }}
+{{ analytics.gender|json_script:"data-gender" }}
+{{ analytics.age_distribution|json_script:"data-age" }}
+{{ analytics.state_distribution|json_script:"data-states" }}
+{{ analytics.country_distribution|json_script:"data-countries" }}
+{{ analytics.returning_split|json_script:"data-returning" }}
+{{ analytics.departments|json_script:"data-departments" }}
+{{ analytics.campaign_stats|json_script:"data-campaigns" }}
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{% static 'dashboard/vendor/chart.umd.js' %}"></script>
+<script src="{% static 'dashboard/js/analytics.js' %}"></script>
+{% endblock %}

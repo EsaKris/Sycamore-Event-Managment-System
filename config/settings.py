@@ -37,6 +37,8 @@ INSTALLED_APPS = [
     'apps.departments',
     'apps.registrations',
     'apps.attendance',
+    'apps.followup',
+    'apps.campaigns',
     'apps.dashboard',
 ]
 
@@ -166,3 +168,8 @@ EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
 EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
 DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='no-reply@sems.local')
+
+# Used to build the open-tracking pixel URL embedded in campaign emails when
+# there's no in-flight request to derive it from (e.g. a management-command
+# send). Leave blank in dev — open tracking is simply skipped without it.
+SEMS_SITE_URL = config('SEMS_SITE_URL', default='')

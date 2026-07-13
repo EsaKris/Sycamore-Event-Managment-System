@@ -1,0 +1,150 @@
+{% extends 'dashboard/base.html' %}
+{% block title %}{{ person.full_name }} · Follow-up{% endblock %}
+{% block body %}
+<div class="app-shell">
+  {% include 'dashboard/partials/sidebar.html' %}
+  <div class="main-content">
+    {% include 'dashboard/partials/topbar.html' %}
+    <div class="content-inner">
+
+      <div class="page-header">
+        <div>
+          <div class="page-eyebrow"><a href="{% url 'followup:list' %}" class="text-muted">Follow-up</a> / {{ person.person_id }}</div>
+          <h1 class="page-title">{{ person.full_name }}</h1>
+          <div class="page-subtitle">{{ person.phone_number }}{% if person.email_address %} · {{ person.email_address }}{% endif %}{% if person.church_name %} · {{ person.church_name }}{% endif %}</div>
+        </div>
+        <a href="{% url 'followup:find_person' %}" class="btn btn-ghost">Find someone else</a>
+      </div>
+
+      {% include 'dashboard/partials/messages.html' %}
+
+      <div class="stat-mini-row">
+        <div class="stat-mini">
+          <div class="n">{{ summary.entries|length }}</div>
+          <div class="l">Total entries</div>
+        </div>
+        <div class="stat-mini">
+          <div class="n">{{ summary.open_count }}</div>
+          <div class="l">Open</div>
+        </div>
+        <div class="stat-mini">
+          <div class="n text-accent">{{ summary.overdue_count }}</div>
+          <div class="l">Overdue</div>
+        </div>
+      </div>
+
+      <div class="grid-2col">
+
+        <div class="card">
+          <div class="card-title">Timeline</div>
+          <div class="card-subtitle">
+            {% if summary.last_contact %}Last contact {{ summary.last_contact.created_at|timesince }} ago{% else %}No entries yet{% endif %}
+          </div>
+
+          {% if summary.entries %}
+            <div class="timeline">
+              {% for entry in summary.entries %}
+                <div class="timeline-item {% if entry.status == 'open' %}is-open{% else %}is-closed{% endif %}{% if entry.is_overdue %} is-overdue{% endif %}">
+                  <div class="timeline-dot"></div>
+                  <div class="timeline-head">
+                    <span class="timeline-type">{{ entry.get_follow_up_type_display }}</span>
+                    <span class="pill {% if entry.status == 'open' %}pill-pending{% else %}pill-confirmed{% endif %}">{{ entry.get_status_display }}</span>
+                    {% if entry.interest_level %}<span class="pill pill-worker">{{ entry.get_interest_level_display }} interest</span>{% endif %}
+                  </div>
+                  <div class="timeline-meta">
+                    {{ entry.created_at|date:"M j, Y g:i A" }}
+                    {% if entry.logged_by %} · logged by {{ entry.logged_by.get_full_name|default:entry.logged_by.username }}{% endif %}
+                    {% if entry.event %} · {{ entry.event.title }}{% endif %}
+                  </div>
+                  {% if entry.remarks %}<div class="timeline-remarks">{{ entry.remarks }}</div>{% endif %}
+                  <div class="timeline-footer">
+                    <span>Outcome: {{ entry.get_outcome_display }}</span>
+                    {% if entry.next_follow_up_date %}<span>· Next: {{ entry.next_follow_up_date|date:"M j, Y" }}{% if entry.is_overdue %} (overdue){% endif %}</span>{% endif %}
+                    {% if entry.officer_assigned %}<span>· Assigned to {{ entry.officer_assigned.get_full_name|default:entry.officer_assigned.username }}</span>{% endif %}
+                    {% if entry.status == 'open' %}
+                      <form method="post" action="{% url 'followup:close_entry' entry.pk %}" class="inline-form" style="margin-left:auto">
+                        {% csrf_token %}
+                        <input type="hidden" name="next" value="{% url 'followup:timeline' person.person_id %}">
+                        <select name="outcome" class="field-input field-select" style="padding:4px 8px;font-size:11.5px">
+                          <option value="reached">Reached</option>
+                          <option value="resolved">Resolved</option>
+                          <option value="no_response">No Response</option>
+                          <option value="rescheduled">Rescheduled</option>
+                        </select>
+                        <button type="submit" class="btn btn-ghost" style="padding:4px 10px;font-size:11.5px">Close</button>
+                      </form>
+                    {% endif %}
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="empty-state">
+              <div class="rings">{% include 'dashboard/partials/rings.html' with size=70 %}</div>
+              <p>No follow-up entries yet — log the first one on the right.</p>
+            </div>
+          {% endif %}
+        </div>
+
+        <div class="card">
+          <div class="card-title">Log a follow-up</div>
+          <div class="card-subtitle">Adds a new entry to {{ person.first_name }}'s timeline</div>
+
+          <form method="post" novalidate>
+            {% csrf_token %}
+
+            <div class="field-group">
+              <label class="field-label" for="{{ form.follow_up_type.id_for_label }}">Type<span class="field-required">*</span></label>
+              {{ form.follow_up_type }}
+              {% if form.follow_up_type.errors %}<div class="field-error">{{ form.follow_up_type.errors.0 }}</div>{% endif %}
+            </div>
+
+            <div class="field-group">
+              <label class="field-label" for="{{ form.event.id_for_label }}">Related event</label>
+              {{ form.event }}
+            </div>
+
+            <div class="field-group">
+              <label class="field-label" for="{{ form.remarks.id_for_label }}">Remarks</label>
+              {{ form.remarks }}
+            </div>
+
+            <div class="form-grid">
+              <div class="field-group">
+                <label class="field-label" for="{{ form.interest_level.id_for_label }}">Interest level</label>
+                {{ form.interest_level }}
+              </div>
+              <div class="field-group">
+                <label class="field-label" for="{{ form.outcome.id_for_label }}">Outcome</label>
+                {{ form.outcome }}
+              </div>
+              <div class="field-group">
+                <label class="field-label" for="{{ form.status.id_for_label }}">Status</label>
+                {{ form.status }}
+              </div>
+              <div class="field-group">
+                <label class="field-label" for="{{ form.next_follow_up_date.id_for_label }}">Next follow-up date</label>
+                {{ form.next_follow_up_date }}
+              </div>
+            </div>
+
+            <div class="field-group">
+              <label class="field-label" for="{{ form.officer_assigned.id_for_label }}">Assign to</label>
+              {{ form.officer_assigned }}
+            </div>
+
+            <div class="form-actions" style="justify-content:flex-end;border-top:none;margin-top:12px;padding-top:0">
+              <button type="submit" class="btn btn-primary">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>
+                Add entry
+              </button>
+            </div>
+          </form>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}
