@@ -2,15 +2,122 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% block title %}Dashboard{% endblock %} · SEMS</title>
-  <link rel="stylesheet" href="{% static 'dashboard/css/dashboard.css' %}">
-  {% block extra_head %}{% endblock %}
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>{% block title %}Dashboard{% endblock %} · Again and Afresh Church | Makurdi, Benue State | Raising Men Through the Word of God</title>    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Primary SEO -->
+    <meta name="description" content="Again and Afresh Church is a Christ-centered ministry in Makurdi, Benue State, committed to raising disciples and transforming lives through God's Word, worship, prayer, biblical teaching, and genuine Christian fellowship. Join our services, events, and online community.">
+    <meta name="keywords" content="Again and Afresh Church, Again and Afresh, Revayah, Church in Makurdi, Church in Benue State, Achusa Makurdi Church, Christian Church Nigeria, Bible Teaching, Worship, Prayer, Church, Jesus Christ, Gospel, Fellowship, Christian Ministry, Church Events, Sermons, Christian Community, Pastor Ogbu Church, Ogbu Church, Pastor Church, Pastor Ogbu Church">
+    <meta name="author" content="Again and Afresh Church">
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+    <meta name="googlebot" content="index, follow">
+    <meta name="language" content="English">
+    <meta name="theme-color" content="#0B0E14">
+    <meta name="format-detection" content="telephone=no">
+
+    <!-- Geo / Local SEO -->
+    <meta name="geo.region" content="NG-BE">
+    <meta name="geo.placename" content="Makurdi, Benue State">
+    <meta name="geo.position" content="7.7322;8.5391">
+    <meta name="ICBM" content="7.7322, 8.5391">
+
+    <!-- Canonical -->
+    <link rel="canonical" href="https://againandafresh.org/">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{% static 'dashboard/img/logo.png' %}">
+    <link rel="shortcut icon" href="{% static 'dashboard/img/logo.png' %}">
+    <link rel="apple-touch-icon" href="{% static 'dashboard/img/logo.png' %}">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Again and Afresh Church">
+    <meta property="og:title" content="Again and Afresh Church | Makurdi, Benue State | Raising Men Through the Word of God">
+    <meta property="og:description" content="Experience authentic worship, biblical teaching, prayer, discipleship, and a thriving Christian community at Again and Afresh Church, Revayah, Achusa, Makurdi.">
+    <meta property="og:url" content="https://againandafresh.org/">
+    <meta property="og:image" content="{% static 'dashboard/img/logo.png' %}">
+    <meta property="og:image:alt" content="Again and Afresh Church Logo">
+    <meta property="og:locale" content="en_NG">
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Again and Afresh Church | Makurdi, Benue State">
+    <meta name="twitter:description" content="Join Again and Afresh Church, Makurdi for biblical teaching, worship, prayer, discipleship and a vibrant Christian family.">
+    <meta name="twitter:image" content="{% static 'dashboard/img/logo.png' %}">
+
+    <!-- Performance -->
+    <link rel="preload" href="{% static 'dashboard/fonts/Inter.ttf' %}" as="font" type="font/ttf" crossorigin>
+    <link rel="preload" href="{% static 'dashboard/fonts/SpaceGrotesk.ttf' %}" as="font" type="font/ttf" crossorigin>
+
+    <!-- Structured Data: Church + Local Business -->
+    <script type="application/ld+json">
+    {
+      "@context":"https://schema.org",
+      "@type":"Church",
+      "name":"Again and Afresh Church",
+      "alternateName":["Again and Afresh","Revayah"],
+      "url":"https://againandafresh.org/",
+      "logo":"https://againandafresh.org/static/dashboard/img/logo.png",
+      "image":"https://againandafresh.org/static/dashboard/img/logo.png",
+      "description":"Again and Afresh Church, also known as Revayah, is a Christ-centered church in Makurdi, Benue State, devoted to biblical teaching, worship, prayer, discipleship, evangelism and building believers into mature followers of Christ.",
+      "address":{
+        "@type":"PostalAddress",
+        "streetAddress":"Revayah, Behind Hotel Lucia, after the first transformer, Achusa",
+        "addressLocality":"Makurdi",
+        "addressRegion":"Benue State",
+        "postalCode":"970101",
+        "addressCountry":"NG"
+      },
+      "geo":{
+        "@type":"GeoCoordinates",
+        "latitude":"7.7322",
+        "longitude":"8.5391"
+      },
+      "areaServed":[
+        {"@type":"City","name":"Makurdi"},
+        {"@type":"State","name":"Benue State"}
+      ],
+      "telephone":"+234 806 235 3965",
+      "founder":{
+        "@type":"Person",
+        "name":"Pastor Ogbu Church"
+      },
+      "sameAs":[
+        "https://www.instagram.com/againandafresh/",
+        "https://www.facebook.com/AgainandAfresh/",
+        "https://www.youtube.com/@againandafresh"
+      ]
+    }
+    </script>
+
+    <!-- Structured Data: Breadcrumb -->
+    <script type="application/ld+json">
+    {
+      "@context":"https://schema.org",
+      "@type":"BreadcrumbList",
+      "itemListElement":[
+        {
+          "@type":"ListItem",
+          "position":1,
+          "name":"Home",
+          "item":"https://againandafresh.org/"
+        }
+      ]
+    }
+    </script>
+
+    <link rel="stylesheet" href="{% static 'dashboard/css/dashboard.css' %}">
+
+    {% block extra_head %}{% endblock %}
 </head>
 <body>
-  {% block body %}{% endblock %}
-  <script src="{% static 'dashboard/js/dashboard.js' %}"></script>
-  {% block extra_scripts %}{% endblock %}
+
+{% block body %}{% endblock %}
+
+<script src="{% static 'dashboard/js/dashboard.js' %}"></script>
+
+{% block extra_scripts %}{% endblock %}
+
 </body>
 </html>
