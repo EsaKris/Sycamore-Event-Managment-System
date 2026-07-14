@@ -1,0 +1,71 @@
+{% extends 'registrations/_wizard_base.html' %}
+{% block title %}Find Attendee{% endblock %}
+
+{% block wizard_content %}
+<div class="wizard-header">
+  <div class="wizard-eyebrow">New Registration · Step 2 of 4 · {{ event.title }}</div>
+  <h1 class="wizard-title">Find their existing record</h1>
+  <div class="wizard-subtitle">Search by phone, email, permanent Person ID, or QR code — whichever they have to hand.</div>
+</div>
+
+<form method="post" novalidate>
+  {% csrf_token %}
+  {% if form.non_field_errors %}
+    <div class="alert alert-error">{{ form.non_field_errors.0 }}</div>
+  {% endif %}
+
+  <div class="form-grid">
+    <div class="field-group">
+      <label class="field-label" for="{{ form.phone_number.id_for_label }}">Phone number</label>
+      {{ form.phone_number }}
+    </div>
+    <div class="field-group">
+      <label class="field-label" for="{{ form.email_address.id_for_label }}">Email address</label>
+      {{ form.email_address }}
+    </div>
+    <div class="field-group">
+      <label class="field-label" for="{{ form.person_id.id_for_label }}">Permanent Person ID</label>
+      {{ form.person_id }}
+    </div>
+    <div class="field-group">
+      <label class="field-label" for="{{ form.qr_token.id_for_label }}">QR code value</label>
+      {{ form.qr_token }}
+    </div>
+  </div>
+
+  <div class="form-actions" style="justify-content:flex-end">
+    <button type="submit" class="btn btn-primary">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>
+      Search
+    </button>
+  </div>
+</form>
+
+{% if searched %}
+  <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--border-subtle)">
+    {% if result %}
+      <div class="result-card">
+        <div class="result-card-main">
+          <div class="avatar-lg">
+            {% if result.photo %}<img src="{{ result.photo.url }}" alt="">{% else %}{{ result.first_name|slice:":1"|upper }}{{ result.last_name|slice:":1"|upper }}{% endif %}
+          </div>
+          <div style="min-width:0">
+            <div class="result-card-name">{{ result.full_name }}</div>
+            <div class="result-card-sub">{{ result.person_id }} · {{ result.phone_number }}{% if result.email_address %} · {{ result.email_address }}{% endif %}</div>
+          </div>
+        </div>
+        <a href="{% url 'registrations:use_match' %}" class="btn btn-primary">
+          Use this record
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </a>
+      </div>
+    {% else %}
+      <div class="empty-state">
+        <div class="rings">{% include 'dashboard/partials/rings.html' with size=70 %}</div>
+        <p>No matching record found. Double-check the details, or register them as a first-time attendee instead.</p>
+        <a href="{% url 'registrations:register_as_new' %}" class="btn btn-ghost" style="margin-top:14px">Register as new attendee</a>
+      </div>
+    {% endif %}
+  </div>
+{% endif %}
+{% endblock %}

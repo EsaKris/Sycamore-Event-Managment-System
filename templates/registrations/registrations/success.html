@@ -1,0 +1,75 @@
+{% extends 'registrations/_wizard_base.html' %}
+{% block title %}Registration Complete{% endblock %}
+
+{% block wizard_content %}
+<div class="success-banner">
+  <div class="success-icon">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6L9 17l-5-5"/></svg>
+  </div>
+  <div class="wizard-eyebrow">Registration complete</div>
+  <h1 class="wizard-title">{{ registration.person.full_name }} is registered</h1>
+  <div class="wizard-subtitle">for {{ registration.event.title }}</div>
+  <div class="reg-number-display">{{ registration.registration_number }}</div>
+  <div class="text-muted" style="font-size:12px">Permanent Person ID: {{ registration.person.person_id }}</div>
+</div>
+
+<div style="border-top:1px solid var(--border-subtle);padding-top:22px">
+  <div class="summary-grid">
+    <div>
+      <div class="summary-item-label">Category</div>
+      <div class="summary-item-value">
+        <span class="pill {% if registration.category == 'worker' %}pill-worker{% else %}pill-participant{% endif %}">{{ registration.get_category_display }}</span>
+      </div>
+    </div>
+    <div>
+      <div class="summary-item-label">Status</div>
+      <div class="summary-item-value"><span class="pill pill-{{ registration.status }}">{{ registration.get_status_display }}</span></div>
+    </div>
+    {% if registration.worker_type %}
+    <div>
+      <div class="summary-item-label">Worker type</div>
+      <div class="summary-item-value">{{ registration.get_worker_type_display }}</div>
+    </div>
+    {% endif %}
+    {% if registration.department %}
+    <div>
+      <div class="summary-item-label">Department</div>
+      <div class="summary-item-value">{{ registration.department.name }}</div>
+    </div>
+    {% endif %}
+    <div>
+      <div class="summary-item-label">Phone</div>
+      <div class="summary-item-value">{{ registration.person.phone_number }}</div>
+    </div>
+    <div>
+      <div class="summary-item-label">Email</div>
+      <div class="summary-item-value">{{ registration.person.email_address|default:"—" }}</div>
+    </div>
+    <div>
+      <div class="summary-item-label">Accommodation</div>
+      <div class="summary-item-value">{{ registration.accommodation_requested|yesno:"Requested,Not requested" }}</div>
+    </div>
+    <div>
+      <div class="summary-item-label">Returning attendee</div>
+      <div class="summary-item-value">{{ registration.is_returning_attendee|yesno:"Yes,No" }}</div>
+    </div>
+  </div>
+
+  <div class="qr-callout">
+    <img src="{% url 'people:qr_image' registration.person.person_id %}" alt="QR code for {{ registration.person.full_name }}" width="132" height="132">
+    <div>
+      <div class="card-title" style="margin-bottom:2px">Check-in QR code</div>
+      <div class="card-subtitle" style="margin-bottom:8px">This code is permanent — it never changes across years, even for future events. Scan it at any check-in session, or enter <strong style="color:var(--text-secondary)">{{ registration.person.person_id }}</strong> or their phone number manually.</div>
+      <a href="{% url 'attendance:scanner' %}?event={{ registration.event.id }}" class="btn btn-ghost" style="font-size:12px;padding:6px 12px">Go to scanner</a>
+    </div>
+  </div>
+
+  <div class="form-actions">
+    <a href="{% url 'registrations:list' %}" class="btn btn-ghost">View all registrations</a>
+    <a href="{% url 'registrations:start' %}" class="btn btn-primary">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>
+      Register another person
+    </a>
+  </div>
+</div>
+{% endblock %}
