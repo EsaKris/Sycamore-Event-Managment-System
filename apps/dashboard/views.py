@@ -8,11 +8,14 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import LoginView, LogoutView
 from django.db.models import Count
 from django.http import JsonResponse
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
+from django.views.decorators.http import require_POST
 from django.utils import timezone
 from django.views.generic import TemplateView
 
-from apps.core.models import AuditLog
+from apps.accounts.mixins import SuperAdminRequiredMixin
+from apps.core.models import AuditLog, Notification, SystemSettings
+from apps.core.services import NotificationService
 from apps.departments.models import Department
 from apps.events.models import Event, EventStatus
 from apps.people.models import Gender, Person
@@ -269,4 +272,126 @@ def analytics_view(request):
         'events': Event.objects.order_by('-year'),
         'selected_event': event,
         'analytics': data,
+    })
+
+
+# --------------------------------------------------------------------------
+# Notifications
+# --------------------------------------------------------------------------
+
+@login_required(login_url='dashboard:login')
+def notifications_dropdown_api(request):
+    unread = NotificationService.unread_for(request.user, limit=8)
+    return JsonResponse({
+        'count': NotificationService.unread_count(request.user),
+        'items': [
+            {
+                'id': n.id, 'title': n.title, 'message': n.message, 'level': n.level,
+                'link_url': n.link_url, 'created_at': timesince_short(n.created_at),
+            }
+            for n in unread
+        ],
+    })
+
+
+def timesince_short(dt):
+    from django.utils.timesince import timesince
+    return timesince(dt).split(',')[0] + ' ago'
+
+
+@login_required(login_url='dashboard:login')
+@require_POST
+def notification_mark_read(request, pk):
+    notification = get_object_or_404(Notification, pk=pk)
+    NotificationService.mark_read(notification, request.user)
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.content_type == 'application/json':
+        return JsonResponse({'ok': True})
+    return redirect(notification.link_url or 'dashboard:notifications')
+
+
+@login_required(login_url='dashboard:login')
+@require_POST
+def notification_mark_all_read(request):
+    NotificationService.mark_all_read(request.user)
+    return JsonResponse({'ok': True})
+
+
+@login_required(login_url='dashboard:login')
+def notifications_page(request):
+    notifications = Notification.objects.all()[:100]
+    read_ids = set(request.user.read_notifications.values_list('id', flat=True))
+    return render(request, 'dashboard/notifications.html', {
+        'notifications': notifications,
+        'read_ids': read_ids,
+    })
+
+
+# --------------------------------------------------------------------------
+# Settings
+# --------------------------------------------------------------------------
+
+class SettingsView(SuperAdminRequiredMixin, TemplateView):
+    template_name = 'dashboard/settings.html'
+
+    def get_context_data(self, **kwargs):
+        from django.conf import settings as django_settings
+        ctx = super().get_context_data(**kwargs)
+        ctx['settings'] = SystemSettings.load()
+        ctx['email_backend'] = django_settings.EMAIL_BACKEND
+        ctx['default_from_email'] = django_settings.DEFAULT_FROM_EMAIL
+        ctx['email_host'] = django_settings.EMAIL_HOST or '(not configured — using console backend)'
+        ctx['person_id_prefix'] = django_settings.SEMS_PERSON_ID_PREFIX
+        ctx['person_id_digits'] = django_settings.SEMS_PERSON_ID_DIGITS
+        ctx['departments'] = Department.objects.order_by('name')
+        return ctx
+
+    def post(self, request, *args, **kwargs):
+        obj = SystemSettings.load()
+        obj.system_name = request.POST.get('system_name', obj.system_name).strip() or obj.system_name
+        obj.church_name = request.POST.get('church_name', obj.church_name).strip()
+        obj.support_email = request.POST.get('support_email', '').strip()
+        obj.default_color_theme = request.POST.get('default_color_theme', obj.default_color_theme).strip()
+        obj.default_theme_mode = request.POST.get('default_theme_mode', obj.default_theme_mode)
+        if request.FILES.get('church_logo'):
+            obj.church_logo = request.FILES['church_logo']
+        obj.save()
+
+        AuditLog.objects.create(
+            administrator=request.user, action='Updated system settings',
+            model_name='SystemSettings', object_id='1',
+            ip_address=getattr(request, 'client_ip', None),
+        )
+        messages.success(request, 'Settings updated.')
+        return redirect('dashboard:settings')
+
+
+@login_required(login_url='dashboard:login')
+def activity_logs(request):
+    logs = AuditLog.objects.select_related('administrator').order_by('-created_at')
+
+    admin_id = request.GET.get('administrator', '')
+    model_name = request.GET.get('model', '')
+    q = request.GET.get('q', '').strip()
+
+    if admin_id:
+        logs = logs.filter(administrator_id=admin_id)
+    if model_name:
+        logs = logs.filter(model_name=model_name)
+    if q:
+        logs = logs.filter(action__icontains=q)
+
+    from django.core.paginator import Paginator
+    paginator = Paginator(logs, 40)
+    page_obj = paginator.get_page(request.GET.get('page'))
+
+    from apps.accounts.models import User
+    return render(request, 'dashboard/activity_logs.html', {
+        'page_obj': page_obj,
+        'paginator': paginator,
+        'administrators': User.objects.order_by('username'),
+        'model_names': AuditLog.objects.exclude(model_name='').values_list('model_name', flat=True).distinct().order_by('model_name'),
+        'selected_admin': admin_id,
+        'selected_model': model_name,
+        'query': q,
+        'total_count': logs.count(),
     })

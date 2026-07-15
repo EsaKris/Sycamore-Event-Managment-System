@@ -15,10 +15,13 @@
     <button class="icon-btn" id="theme-toggle" aria-label="Toggle theme">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36a5.4 5.4 0 0 1-7.54-7.54C13.92 3.04 13.46 3 13 3Z"/></svg>
     </button>
-    <button class="icon-btn" aria-label="Notifications">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-      <span class="dot"></span>
-    </button>
+    <div style="position:relative" id="notif-wrap">
+      <button class="icon-btn" id="notif-bell" aria-label="Notifications">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <span class="dot" id="notif-dot" style="display:none"></span>
+      </button>
+      <div id="notif-dropdown" class="search-dropdown" style="width:340px;right:0;left:auto"></div>
+    </div>
     <div class="profile-chip" title="{{ request.user.get_full_name|default:request.user.username }} · {{ request.user.get_role_display }}">
       <div class="avatar">{{ request.user.first_name|slice:":1"|default:request.user.username|slice:":1"|upper }}</div>
     </div>

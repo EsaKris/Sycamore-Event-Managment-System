@@ -1,0 +1,119 @@
+{% extends 'dashboard/base.html' %}
+{% block title %}Settings{% endblock %}
+{% block body %}
+<div class="app-shell">
+  {% include 'dashboard/partials/sidebar.html' %}
+  <div class="main-content">
+    {% include 'dashboard/partials/topbar.html' %}
+    <div class="content-inner">
+
+      <div class="page-header">
+        <div>
+          <div class="page-eyebrow">System</div>
+          <h1 class="page-title">Settings</h1>
+          <div class="page-subtitle">Super Administrator only</div>
+        </div>
+      </div>
+
+      {% include 'dashboard/partials/messages.html' %}
+
+      <div class="grid-2col">
+        <div style="display:flex;flex-direction:column;gap:18px">
+
+          <div class="card">
+            <div class="card-title">Branding</div>
+            <div class="card-subtitle">System name, church details, and conference branding</div>
+            <form method="post" enctype="multipart/form-data">
+              {% csrf_token %}
+              <div class="form-grid" style="grid-template-columns:1fr 1fr">
+                <div class="field-group">
+                  <label class="field-label">System name</label>
+                  <input type="text" name="system_name" class="field-input" value="{{ settings.system_name }}">
+                </div>
+                <div class="field-group">
+                  <label class="field-label">Church name</label>
+                  <input type="text" name="church_name" class="field-input" value="{{ settings.church_name }}">
+                </div>
+              </div>
+              <div class="field-group">
+                <label class="field-label">Support email</label>
+                <input type="email" name="support_email" class="field-input" value="{{ settings.support_email }}">
+              </div>
+              <div class="form-grid" style="grid-template-columns:1fr 1fr">
+                <div class="field-group">
+                  <label class="field-label">Default event colour theme</label>
+                  <input type="text" name="default_color_theme" class="field-input" value="{{ settings.default_color_theme }}" placeholder="#D4A24C">
+                </div>
+                <div class="field-group">
+                  <label class="field-label">Default dashboard theme</label>
+                  <select name="default_theme_mode" class="field-input field-select">
+                    <option value="dark" {% if settings.default_theme_mode == 'dark' %}selected{% endif %}>Dark</option>
+                    <option value="light" {% if settings.default_theme_mode == 'light' %}selected{% endif %}>Light</option>
+                  </select>
+                </div>
+              </div>
+              <div class="field-group">
+                <label class="field-label">Church logo</label>
+                {% if settings.church_logo %}
+                  <img src="{{ settings.church_logo.url }}" alt="Church logo" style="height:48px;border-radius:6px;margin-bottom:8px;display:block">
+                {% endif %}
+                <input type="file" name="church_logo" class="field-input" accept="image/*">
+              </div>
+              <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Save settings</button>
+              </div>
+            </form>
+          </div>
+
+          <div class="card">
+            <div class="card-title">Departments</div>
+            <div class="card-subtitle">{{ departments|length }} department{{ departments|length|pluralize }} configured</div>
+            <div class="row-list">
+              {% for dept in departments|slice:":5" %}
+                <div class="row-item">
+                  <div class="row-item-title">{{ dept.name }}</div>
+                  <div class="row-item-meta">{% if dept.is_active %}Active{% else %}Archived{% endif %}</div>
+                </div>
+              {% empty %}
+                <div class="empty-state" style="padding:14px 8px"><p>No departments yet.</p></div>
+              {% endfor %}
+            </div>
+            <a href="{% url 'departments:list' %}" class="btn btn-ghost" style="margin-top:12px;width:100%;justify-content:center">Manage departments</a>
+          </div>
+
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:18px">
+          <div class="card">
+            <div class="card-title">Email settings</div>
+            <div class="card-subtitle">Configured via environment variables, not editable here — credentials don't belong in a database an admin can edit from a form.</div>
+            <div class="row-list">
+              <div class="row-item"><div class="row-item-title">Backend</div><div class="row-item-meta cell-sub">{{ email_backend }}</div></div>
+              <div class="row-item"><div class="row-item-title">From address</div><div class="row-item-meta cell-sub">{{ default_from_email }}</div></div>
+              <div class="row-item"><div class="row-item-title">SMTP host</div><div class="row-item-meta cell-sub">{{ email_host }}</div></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">QR / Person ID settings</div>
+            <div class="card-subtitle">Baked into every already-issued Person ID — changing at runtime would risk collisions, so this is env-configured, not editable here.</div>
+            <div class="row-list">
+              <div class="row-item"><div class="row-item-title">ID prefix</div><div class="row-item-meta cell-sub">{{ person_id_prefix }}</div></div>
+              <div class="row-item"><div class="row-item-title">ID digit count</div><div class="row-item-meta cell-sub">{{ person_id_digits }}</div></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">Backups</div>
+            <div class="card-subtitle">Not yet automated from this dashboard.</div>
+            <div class="empty-state" style="padding:14px 8px">
+              <p>Back up the Postgres database directly (e.g. <code>pg_dump</code>) until scheduled backups are built.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -128,4 +128,79 @@
       if (searchWrap && !searchWrap.contains(e.target)) closeDropdown();
     });
   }
+
+  // ------------------------------------------------------------- Notifications
+  const notifWrap = document.getElementById('notif-wrap');
+  const notifBell = document.getElementById('notif-bell');
+  const notifDot = document.getElementById('notif-dot');
+  const notifDropdown = document.getElementById('notif-dropdown');
+
+  function getCookie(name) {
+    const match = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
+    return match ? match.pop() : '';
+  }
+
+  function refreshNotifBadge() {
+    if (!notifDot) return;
+    fetch('/dashboard/notifications/api/')
+      .then(r => r.json())
+      .then(data => { notifDot.style.display = data.count > 0 ? 'block' : 'none'; })
+      .catch(() => {});
+  }
+
+  function renderNotifDropdown(data) {
+    if (!data.items.length) {
+      notifDropdown.innerHTML = '<div class="search-dropdown-empty">You\'re all caught up.</div>';
+    } else {
+      let html = '';
+      data.items.forEach(function (n) {
+        html += `<div class="notif-item" data-id="${n.id}" data-url="${n.link_url || ''}">
+          <div class="notif-dot notif-${n.level}"></div>
+          <div style="min-width:0">
+            <div class="notif-item-title">${n.title}</div>
+            <div class="notif-item-message">${n.message}</div>
+            <div class="notif-item-time">${n.created_at}</div>
+          </div>
+        </div>`;
+      });
+      html += `<div class="search-dropdown-footer" id="notif-see-all">See all notifications</div>`;
+      notifDropdown.innerHTML = html;
+
+      notifDropdown.querySelectorAll('.notif-item').forEach(function (el) {
+        el.addEventListener('click', function () {
+          const id = el.dataset.id;
+          const url = el.dataset.url;
+          fetch(`/dashboard/notifications/${id}/read/`, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': getCookie('csrftoken'), 'X-Requested-With': 'XMLHttpRequest' },
+          }).then(function () {
+            if (url) { window.location.href = url; } else { refreshNotifBadge(); el.remove(); }
+          });
+        });
+      });
+      const seeAll = document.getElementById('notif-see-all');
+      if (seeAll) seeAll.addEventListener('click', function () { window.location.href = '/dashboard/notifications/'; });
+    }
+    notifDropdown.classList.add('is-open');
+  }
+
+  if (notifBell && notifDropdown) {
+    notifBell.addEventListener('click', function (e) {
+      e.stopPropagation();
+      if (notifDropdown.classList.contains('is-open')) {
+        notifDropdown.classList.remove('is-open');
+        return;
+      }
+      fetch('/dashboard/notifications/api/')
+        .then(r => r.json())
+        .then(function (data) {
+          notifDot.style.display = data.count > 0 ? 'block' : 'none';
+          renderNotifDropdown(data);
+        });
+    });
+    document.addEventListener('click', function (e) {
+      if (notifWrap && !notifWrap.contains(e.target)) notifDropdown.classList.remove('is-open');
+    });
+    refreshNotifBadge();
+  }
 })();

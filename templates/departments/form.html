@@ -1,0 +1,43 @@
+{% extends 'dashboard/base.html' %}
+{% block title %}{% if department %}Edit Department{% else %}New Department{% endif %}{% endblock %}
+{% block body %}
+<div class="app-shell">
+  {% include 'dashboard/partials/sidebar.html' %}
+  <div class="main-content">
+    {% include 'dashboard/partials/topbar.html' %}
+    <div class="content-inner">
+
+      <div class="page-header">
+        <div>
+          <div class="page-eyebrow"><a href="{% url 'departments:list' %}" class="text-muted">Departments</a> / {% if department %}Edit{% else %}New{% endif %}</div>
+          <h1 class="page-title">{% if department %}{{ department.name }}{% else %}New Department{% endif %}</h1>
+        </div>
+      </div>
+
+      <div class="card" style="max-width:480px">
+        <form method="post">
+          {% csrf_token %}
+          <div class="field-group">
+            <label class="field-label">Name</label>
+            {{ form.name }}
+            {% if form.name.errors %}<div class="field-error">{{ form.name.errors.0 }}</div>{% endif %}
+          </div>
+          <div class="field-group">
+            <label class="field-label">Description</label>
+            {{ form.description }}
+          </div>
+          <div class="field-group" style="display:flex;align-items:center;gap:8px">
+            {{ form.is_active }}
+            <label class="field-label" style="margin:0" for="{{ form.is_active.id_for_label }}">Active</label>
+          </div>
+          <div class="form-actions">
+            <a href="{% url 'departments:list' %}" class="btn btn-ghost">Cancel</a>
+            <button type="submit" class="btn btn-primary">Save</button>
+          </div>
+        </form>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

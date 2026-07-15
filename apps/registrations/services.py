@@ -12,6 +12,7 @@ from typing import Optional
 
 from django.db import transaction
 
+from apps.core.services import NotificationService
 from apps.people.models import Person
 from apps.people.services import DuplicatePersonError, PersonService
 
@@ -39,6 +40,11 @@ class RegistrationService:
         registration = Registration.objects.create(
             person=person, event=event, is_returning_attendee=False, **registration_fields,
         )
+        NotificationService.notify(
+            title='New Registration',
+            message=f"{person.full_name} registered for {event.title} as {registration.get_category_display()}.",
+            link_url=f"/dashboard/registrations/{registration.pk}/",
+        )
         return RegistrationResult(person=person, registration=registration, person_was_created=True)
 
     @staticmethod
@@ -58,6 +64,11 @@ class RegistrationService:
 
         registration = Registration.objects.create(
             person=person, event=event, is_returning_attendee=True, **registration_fields,
+        )
+        NotificationService.notify(
+            title='New Registration',
+            message=f"{person.full_name} (returning attendee) registered for {event.title} as {registration.get_category_display()}.",
+            link_url=f"/dashboard/registrations/{registration.pk}/",
         )
         return RegistrationResult(person=person, registration=registration, person_was_created=False)
 

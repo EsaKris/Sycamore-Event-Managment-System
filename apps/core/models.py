@@ -72,10 +72,10 @@ class SoftDeleteModel(models.Model):
 
 class AuditLog(TimeStampedModel):
     """
-    Minimal audit trail. Full Activity Logs module (with IP address,
-    affected-record links, admin UI, filtering, etc.) is a later phase —
-    this table is intentionally simple so nothing else has to change
-    when that module is built out.
+    The audit trail backing the Activity Logs page (apps/dashboard).
+    Written to from service-layer methods across the codebase (never from
+    templates or ad-hoc view code) so every mutating action has a
+    consistent record: who, what, on which record, from where.
     """
 
     administrator = models.ForeignKey(
@@ -90,6 +90,90 @@ class AuditLog(TimeStampedModel):
 
     class Meta:
         ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['-created_at']),
+            models.Index(fields=['model_name']),
+        ]
 
     def __str__(self):
         return f"{self.administrator} - {self.action} ({self.created_at:%Y-%m-%d %H:%M})"
+
+
+class NotificationLevel(models.TextChoices):
+    INFO = 'info', 'Info'
+    SUCCESS = 'success', 'Success'
+    WARNING = 'warning', 'Warning'
+    ERROR = 'error', 'Error'
+
+
+class Notification(TimeStampedModel):
+    """
+    Per spec: 'Real-time notifications' — New Registration, New
+    Administrator, Registration Closed, Email Failed, Upcoming Event, etc.
+
+    Broadcast-style rather than per-recipient rows: one Notification is
+    visible to every administrator, and read-state is tracked per-admin
+    via the `read_by` M2M. This avoids fanning out N duplicate rows at
+    creation time for what's a small admin team by nature (a handful of
+    people running one conference), and keeps "mark all read" a single
+    query instead of a bulk-create.
+    """
+
+    level = models.CharField(max_length=10, choices=NotificationLevel.choices, default=NotificationLevel.INFO)
+    title = models.CharField(max_length=150)
+    message = models.CharField(max_length=500, blank=True)
+    link_url = models.CharField(max_length=255, blank=True)
+
+    read_by = models.ManyToManyField(settings.AUTH_USER_MODEL, blank=True, related_name='read_notifications')
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [models.Index(fields=['-created_at'])]
+
+    def __str__(self):
+        return self.title
+
+    def is_read_by(self, user) -> bool:
+        return self.read_by.filter(pk=getattr(user, 'pk', None)).exists()
+
+
+class SystemSettings(models.Model):
+    """
+    Singleton (enforced via pk=1 in `load()`/`save()`) holding the
+    site-wide configuration that's actually safe and sensible to store in
+    the database and edit from a UI.
+
+    Deliberately does NOT include SMTP credentials or the Person-ID
+    prefix/digit-count: those live in environment variables (see
+    config/settings.py) on purpose — secrets don't belong in a
+    database an administrator can edit from a web form, and the ID
+    prefix/format is baked into every already-issued Person ID, so
+    changing it at runtime without a migration plan would be actively
+    dangerous. The Settings page surfaces both as read-only for visibility.
+    """
+
+    system_name = models.CharField(max_length=100, default='SEMS')
+    church_name = models.CharField(max_length=150, default='Again and Afresh Church')
+    church_logo = models.ImageField(upload_to='settings/', null=True, blank=True)
+    support_email = models.EmailField(blank=True)
+    default_color_theme = models.CharField(max_length=7, default='#D4A24C')
+    default_theme_mode = models.CharField(
+        max_length=5, choices=[('dark', 'Dark'), ('light', 'Light')], default='dark',
+    )
+
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        self.pk = 1
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        pass  # singleton — deletion is a no-op rather than an error, so stray calls don't 500
+
+    @classmethod
+    def load(cls) -> 'SystemSettings':
+        obj, _ = cls.objects.get_or_create(pk=1)
+        return obj
+
+    def __str__(self):
+        return self.system_name

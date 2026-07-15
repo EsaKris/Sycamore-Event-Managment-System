@@ -1,0 +1,69 @@
+{% extends 'dashboard/base.html' %}
+{% block title %}Departments{% endblock %}
+{% block body %}
+<div class="app-shell">
+  {% include 'dashboard/partials/sidebar.html' %}
+  <div class="main-content">
+    {% include 'dashboard/partials/topbar.html' %}
+    <div class="content-inner">
+
+      <div class="page-header">
+        <div>
+          <div class="page-eyebrow">Conference</div>
+          <h1 class="page-title">Departments</h1>
+          <div class="page-subtitle">{{ departments|length }} department{{ departments|length|pluralize }}</div>
+        </div>
+        <a href="{% url 'departments:create' %}" class="btn btn-primary">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>
+          New Department
+        </a>
+      </div>
+
+      {% include 'dashboard/partials/messages.html' %}
+
+      {% if departments %}
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr><th>Name</th><th>Description</th><th>Workers</th><th>Status</th><th></th></tr>
+            </thead>
+            <tbody>
+              {% for dept in departments %}
+                <tr>
+                  <td>{{ dept.name }}</td>
+                  <td class="cell-sub">{{ dept.description|default:"—"|truncatechars:60 }}</td>
+                  <td>{{ dept.worker_count }}</td>
+                  <td>
+                    {% if dept.is_active %}
+                      <span class="pill pill-participant">Active</span>
+                    {% else %}
+                      <span class="pill" style="background:var(--bg-hover);color:var(--text-muted)">Archived</span>
+                    {% endif %}
+                  </td>
+                  <td style="text-align:right;white-space:nowrap">
+                    <a href="{% url 'departments:edit' dept.pk %}" class="btn btn-ghost" style="font-size:11.5px;padding:6px 10px">Edit</a>
+                    <form method="post" action="{% url 'departments:toggle_active' dept.pk %}" style="display:inline">
+                      {% csrf_token %}
+                      <button type="submit" class="btn btn-ghost" style="font-size:11.5px;padding:6px 10px">
+                        {% if dept.is_active %}Archive{% else %}Activate{% endif %}
+                      </button>
+                    </form>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="card">
+          <div class="empty-state">
+            <div class="rings">{% include 'dashboard/partials/rings.html' with size=70 %}</div>
+            <p>No departments yet. Create the first one to start assigning workers.</p>
+          </div>
+        </div>
+      {% endif %}
+
+    </div>
+  </div>
+</div>
+{% endblock %}
