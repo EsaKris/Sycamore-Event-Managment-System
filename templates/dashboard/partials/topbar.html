@@ -1,14 +1,13 @@
 <header class="topbar">
-  <div style="display:flex;align-items:center;gap:14px">
-    <button class="icon-btn" id="sidebar-toggle" style="display:none" aria-label="Toggle menu">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
-    </button>
-    <div class="global-search" id="global-search" style="position:relative">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>
-      <input id="global-search-input" type="text" placeholder="Search people, registrations, events…" autocomplete="off">
-      <kbd>&#8984;K</kbd>
-      <div id="global-search-results" class="search-dropdown"></div>
-    </div>
+  <button class="icon-btn" id="sidebar-toggle" style="display:none" aria-label="Toggle menu">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+  </button>
+
+  <div class="global-search" id="global-search">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>
+    <input id="global-search-input" type="text" placeholder="Search people, registrations, events…" autocomplete="off">
+    <kbd>&#8984;K</kbd>
+    <div id="global-search-results" class="search-dropdown"></div>
   </div>
 
   <div class="topbar-actions">
