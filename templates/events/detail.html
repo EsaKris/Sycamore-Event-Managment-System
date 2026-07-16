@@ -1,0 +1,133 @@
+{% extends 'dashboard/base.html' %}
+{% block title %}{{ event.title }}{% endblock %}
+{% block body %}
+<div class="app-shell">
+  {% include 'dashboard/partials/sidebar.html' %}
+  <div class="main-content">
+    {% include 'dashboard/partials/topbar.html' %}
+    <div class="content-inner">
+
+      <div class="page-header">
+        <div>
+          <div class="page-eyebrow"><a href="{% url 'events:list' %}" class="text-muted">Events</a> / {{ event.title }}</div>
+          <h1 class="page-title">{{ event.title }}</h1>
+          <div class="page-subtitle">{{ event.start_date|date:"M j" }}–{{ event.end_date|date:"M j, Y" }}{% if event.venue %} · {{ event.venue }}{% endif %}</div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <a href="{% url 'events:edit' event.pk %}" class="btn btn-ghost">Edit</a>
+          <a href="{% url 'registrations:start' %}" class="btn btn-primary">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>
+            New Registration
+          </a>
+        </div>
+      </div>
+
+      {% include 'dashboard/partials/messages.html' %}
+
+      <div class="stat-grid">
+        <div class="card stat-card">
+          <div class="stat-label">Total Registrations</div>
+          <div class="stat-value">{{ total_registrations }}</div>
+          {% if capacity_pct != None %}<div class="stat-delta flat">{{ capacity_pct }}% of capacity</div>{% endif %}
+        </div>
+        <div class="card stat-card">
+          <div class="stat-label">Workers</div>
+          <div class="stat-value">{{ workers }}</div>
+        </div>
+        <div class="card stat-card">
+          <div class="stat-label">Participants</div>
+          <div class="stat-value">{{ participants }}</div>
+        </div>
+        <div class="card stat-card">
+          <div class="stat-label">Attendance Sessions</div>
+          <div class="stat-value">{{ sessions_count }}</div>
+        </div>
+      </div>
+
+      <div class="grid-2col">
+        <div style="display:flex;flex-direction:column;gap:18px">
+
+          <div class="card">
+            <div class="card-title">Recent registrations</div>
+            {% if recent_registrations %}
+              <div class="row-list">
+                {% for reg in recent_registrations %}
+                  <a href="{% url 'registrations:detail' reg.pk %}" class="row-item" style="text-decoration:none;color:inherit">
+                    <div class="row-item-main">
+                      <div style="min-width:0">
+                        <div class="row-item-title">{{ reg.person.full_name }}</div>
+                        <div class="row-item-sub">{{ reg.registration_number }}</div>
+                      </div>
+                    </div>
+                    <div class="row-item-meta">
+                      <span class="pill {% if reg.category == 'worker' %}pill-worker{% else %}pill-participant{% endif %}">{{ reg.get_category_display }}</span>
+                    </div>
+                  </a>
+                {% endfor %}
+              </div>
+              <a href="{% url 'registrations:list' %}?event={{ event.id }}" class="btn btn-ghost" style="width:100%;justify-content:center;margin-top:12px">View all registrations</a>
+            {% else %}
+              <div class="empty-state" style="padding:16px 10px"><p>No registrations yet.</p></div>
+            {% endif %}
+          </div>
+
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:18px">
+
+          <div class="card">
+            <div class="card-title">Registration</div>
+            <div class="card-subtitle">Currently <strong style="color:var(--text-secondary)">{{ event.get_registration_status_display }}</strong></div>
+            <form method="post" action="{% url 'events:toggle_registration' event.pk %}">
+              {% csrf_token %}
+              <button type="submit" class="btn {% if event.registration_status == 'open' %}btn-ghost{% else %}btn-primary{% endif %}" style="width:100%;justify-content:center">
+                {% if event.registration_status == 'open' %}Close registration{% else %}Open registration{% endif %}
+              </button>
+            </form>
+          </div>
+
+          <div class="card">
+            <div class="card-title">Event status</div>
+            <div class="card-subtitle">{{ event.get_status_display }}</div>
+            <form method="post" action="{% url 'events:set_status' event.pk %}" style="display:flex;gap:8px">
+              {% csrf_token %}
+              <select name="status" class="field-input field-select">
+                <option value="draft" {% if event.status == 'draft' %}selected{% endif %}>Draft</option>
+                <option value="upcoming" {% if event.status == 'upcoming' %}selected{% endif %}>Upcoming</option>
+                <option value="active" {% if event.status == 'active' %}selected{% endif %}>Active</option>
+                <option value="completed" {% if event.status == 'completed' %}selected{% endif %}>Completed</option>
+                <option value="archived" {% if event.status == 'archived' %}selected{% endif %}>Archived</option>
+              </select>
+              <button type="submit" class="btn btn-ghost">Update</button>
+            </form>
+          </div>
+
+          <div class="card">
+            <div class="card-title">Quick links</div>
+            <div class="quick-actions">
+              <a href="{% url 'attendance:scanner' %}?event={{ event.id }}" class="quick-action">
+                <div class="qa-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></div>
+                <div class="qa-title">Scanner</div>
+              </a>
+              <a href="{% url 'registrations:id_cards' %}?event={{ event.id }}" class="quick-action">
+                <div class="qa-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><circle cx="9" cy="10" r="2"/></svg></div>
+                <div class="qa-title">ID Cards</div>
+              </a>
+              <a href="{% url 'dashboard:reports' %}?report=registrations&event={{ event.id }}" class="quick-action">
+                <div class="qa-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19V9M12 19V5M20 19v-7"/></svg></div>
+                <div class="qa-title">Reports</div>
+              </a>
+              <a href="{% url 'dashboard:analytics' %}?event={{ event.id }}" class="quick-action">
+                <div class="qa-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 15l3-4 3 3 5-7"/></svg></div>
+                <div class="qa-title">Analytics</div>
+              </a>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

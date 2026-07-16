@@ -27,7 +27,9 @@ urlpatterns = [
     path('dashboard/campaigns/', include('apps.campaigns.urls')),
     path('dashboard/administrators/', include('apps.accounts.urls')),
     path('dashboard/departments/', include('apps.departments.urls')),
-    # path('api/v1/', include('config.api_urls')),          # phase: API module
+    path('dashboard/events/', include('apps.events.urls')),
+    path('api/v1/', include('config.api_urls')),
+    path('api-auth/', include('rest_framework.urls')),
 ]
 
 if settings.DEBUG:

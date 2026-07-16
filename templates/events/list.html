@@ -1,0 +1,61 @@
+{% extends 'dashboard/base.html' %}
+{% block title %}Events{% endblock %}
+{% block body %}
+<div class="app-shell">
+  {% include 'dashboard/partials/sidebar.html' %}
+  <div class="main-content">
+    {% include 'dashboard/partials/topbar.html' %}
+    <div class="content-inner">
+
+      <div class="page-header">
+        <div>
+          <div class="page-eyebrow">Conference</div>
+          <h1 class="page-title">Events</h1>
+          <div class="page-subtitle">{{ events|length }} event{{ events|length|pluralize }}</div>
+        </div>
+        <a href="{% url 'events:create' %}" class="btn btn-primary">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>
+          New Event
+        </a>
+      </div>
+
+      {% include 'dashboard/partials/messages.html' %}
+
+      <form method="get" class="toolbar" style="margin-bottom:18px">
+        <select name="status" class="field-input field-select" onchange="this.form.submit()">
+          <option value="">All statuses</option>
+          {% for value, label in statuses %}
+            <option value="{{ value }}" {% if selected_status == value %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </form>
+
+      {% if events %}
+        <div class="card-grid">
+          {% for ev in events %}
+            <a href="{% url 'events:detail' ev.pk %}" class="card" style="text-decoration:none;color:inherit;display:block">
+              <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+                <div class="card-title" style="margin:0">{{ ev.title }}</div>
+                <span class="pill" style="background:{{ ev.color_theme }}22;color:{{ ev.color_theme }}">{{ ev.get_status_display }}</span>
+              </div>
+              <div class="card-subtitle" style="margin-bottom:10px">{{ ev.start_date|date:"M j" }}–{{ ev.end_date|date:"M j, Y" }}{% if ev.venue %} · {{ ev.venue }}{% endif %}</div>
+              <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-muted)">
+                <span>{{ ev.registrations.count }} registration{{ ev.registrations.count|pluralize }}</span>
+                <span>{{ ev.get_registration_status_display }}</span>
+              </div>
+            </a>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="card">
+          <div class="empty-state">
+            <div class="rings">{% include 'dashboard/partials/rings.html' with size=70 %}</div>
+            <p>No events yet. Create the first one to start registering people.</p>
+          </div>
+        </div>
+      {% endif %}
+
+    </div>
+  </div>
+</div>
+{% endblock %}

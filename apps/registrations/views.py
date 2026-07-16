@@ -29,7 +29,7 @@ from apps.people.models import Person
 from apps.people.services import DuplicatePersonError
 
 from .forms import PersonForm, PersonSearchForm, RegistrationDetailsForm, StartForm
-from .models import Registration, RegistrationStatus
+from .models import Registration, RegistrationStatus, WorkerType
 from .services import AlreadyRegisteredError, RegistrationService
 
 SESSION_KEY = 'reg_wizard'
@@ -368,3 +368,57 @@ def id_card_set_badge_label(request, pk):
         registration.save(update_fields=['badge_label'])
         messages.success(request, 'Badge label updated.')
     return redirect('registrations:detail', pk=pk)
+
+
+# --------------------------------------------------------------------------
+# Workers — a specialized lens on Registration (category=worker), not a
+# separate model. Departments assign people, Registrations already carry
+# category/worker_type/department — Workers is just that slice with its
+# own filters and columns, matching the sidebar's separate nav item.
+# --------------------------------------------------------------------------
+
+class WorkerListView(LoginRequiredMixin, ListView):
+    login_url = 'dashboard:login'
+    template_name = 'registrations/workers.html'
+    context_object_name = 'workers'
+    paginate_by = 30
+
+    def get_queryset(self):
+        qs = (
+            Registration.objects.filter(category='worker')
+            .select_related('person', 'event', 'department')
+            .order_by('-created_at')
+        )
+        q = self.request.GET.get('q', '').strip()
+        event_id = self.request.GET.get('event', '')
+        department_id = self.request.GET.get('department', '')
+        worker_type = self.request.GET.get('worker_type', '')
+
+        if q:
+            from django.db.models import Q
+            qs = qs.filter(
+                Q(person__first_name__icontains=q) | Q(person__last_name__icontains=q)
+                | Q(person__phone_number__icontains=q) | Q(person__person_id__icontains=q)
+            )
+        if event_id:
+            qs = qs.filter(event_id=event_id)
+        if department_id:
+            qs = qs.filter(department_id=department_id)
+        if worker_type:
+            qs = qs.filter(worker_type=worker_type)
+        return qs
+
+    def get_context_data(self, **kwargs):
+        from apps.departments.models import Department
+        ctx = super().get_context_data(**kwargs)
+        ctx.update({
+            'events': Event.objects.order_by('-year'),
+            'departments': Department.objects.filter(is_active=True).order_by('name'),
+            'worker_types': WorkerType.choices,
+            'query': self.request.GET.get('q', ''),
+            'selected_event': self.request.GET.get('event', ''),
+            'selected_department': self.request.GET.get('department', ''),
+            'selected_worker_type': self.request.GET.get('worker_type', ''),
+            'total_count': self.get_queryset().count(),
+        })
+        return ctx

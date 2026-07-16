@@ -6,6 +6,7 @@ app_name = 'registrations'
 
 urlpatterns = [
     path('', views.RegistrationListView.as_view(), name='list'),
+    path('workers/', views.WorkerListView.as_view(), name='workers'),
     path('<int:pk>/', views.RegistrationDetailView.as_view(), name='detail'),
 
     path('new/', views.start, name='start'),

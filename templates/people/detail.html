@@ -1,0 +1,119 @@
+{% extends 'dashboard/base.html' %}
+{% block title %}{{ person.full_name }}{% endblock %}
+{% block body %}
+<div class="app-shell">
+  {% include 'dashboard/partials/sidebar.html' %}
+  <div class="main-content">
+    {% include 'dashboard/partials/topbar.html' %}
+    <div class="content-inner">
+
+      <div class="page-header">
+        <div>
+          <div class="page-eyebrow"><a href="{% url 'people:list' %}" class="text-muted">People</a> / {{ person.person_id }}</div>
+          <h1 class="page-title">{{ person.full_name }}</h1>
+          <div class="page-subtitle">{{ person.phone_number }}{% if person.email_address %} · {{ person.email_address }}{% endif %}</div>
+        </div>
+        <a href="{% url 'followup:timeline' person.person_id %}" class="btn btn-primary">Log a follow-up</a>
+      </div>
+
+      <div class="grid-2col">
+        <div style="display:flex;flex-direction:column;gap:18px">
+
+          <div class="card">
+            <div class="card-title">Contact & profile</div>
+            <div class="summary-grid">
+              <div><div class="summary-item-label">Gender</div><div class="summary-item-value">{{ person.get_gender_display|default:"—" }}</div></div>
+              <div><div class="summary-item-label">Marital status</div><div class="summary-item-value">{{ person.get_marital_status_display|default:"—" }}</div></div>
+              <div><div class="summary-item-label">State</div><div class="summary-item-value">{{ person.state|default:"—" }}</div></div>
+              <div><div class="summary-item-label">Country</div><div class="summary-item-value">{{ person.country|default:"—" }}</div></div>
+              <div><div class="summary-item-label">Church</div><div class="summary-item-value">{{ person.church_name|default:"—" }}</div></div>
+              <div><div class="summary-item-label">Occupation</div><div class="summary-item-value">{{ person.occupation|default:"—" }}</div></div>
+              <div><div class="summary-item-label">Emergency contact</div><div class="summary-item-value">{{ person.emergency_contact_name|default:"—" }}{% if person.emergency_phone %} · {{ person.emergency_phone }}{% endif %}</div></div>
+              <div><div class="summary-item-label">On file since</div><div class="summary-item-value">{{ person.created_at|date:"M j, Y" }}</div></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">Registrations</div>
+            <div class="card-subtitle">Across every event — this Person record is never duplicated</div>
+            {% if registrations %}
+              <div class="row-list">
+                {% for reg in registrations %}
+                  <a href="{% url 'registrations:detail' reg.pk %}" class="row-item" style="text-decoration:none;color:inherit">
+                    <div class="row-item-main">
+                      <div style="min-width:0">
+                        <div class="row-item-title">{{ reg.event.title }}</div>
+                        <div class="row-item-sub">{{ reg.registration_number }}{% if reg.department %} · {{ reg.department.name }}{% endif %}</div>
+                      </div>
+                    </div>
+                    <div class="row-item-meta">
+                      <span class="pill {% if reg.category == 'worker' %}pill-worker{% else %}pill-participant{% endif %}">{{ reg.get_category_display }}</span>
+                    </div>
+                  </a>
+                {% endfor %}
+              </div>
+            {% else %}
+              <div class="empty-state" style="padding:14px 8px"><p>No registrations yet.</p></div>
+            {% endif %}
+          </div>
+
+          <div class="card">
+            <div class="card-title">Recent follow-up</div>
+            {% if follow_ups %}
+              <div class="row-list">
+                {% for f in follow_ups %}
+                  <div class="row-item">
+                    <div class="row-item-main">
+                      <div style="min-width:0">
+                        <div class="row-item-title">{{ f.get_follow_up_type_display }}</div>
+                        <div class="row-item-sub">{{ f.remarks|default:"—"|truncatechars:60 }}</div>
+                      </div>
+                    </div>
+                    <div class="row-item-meta">{{ f.created_at|timesince }} ago</div>
+                  </div>
+                {% endfor %}
+              </div>
+              <a href="{% url 'followup:timeline' person.person_id %}" class="btn btn-ghost" style="width:100%;justify-content:center;margin-top:12px">View full timeline</a>
+            {% else %}
+              <div class="empty-state" style="padding:14px 8px"><p>No follow-up logged yet.</p></div>
+            {% endif %}
+          </div>
+
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:18px">
+          <div class="card" style="text-align:center">
+            <img src="{% url 'people:qr_image' person.person_id %}" alt="QR code" width="140" height="140" style="border-radius:8px;background:#fff;padding:6px">
+            <div class="card-title" style="margin-top:12px">{{ person.person_id }}</div>
+            <div class="card-subtitle">Permanent check-in code</div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">Recent attendance</div>
+            {% if attendance_records %}
+              <div class="row-list">
+                {% for a in attendance_records %}
+                  <div class="row-item">
+                    <div class="row-item-main">
+                      <div style="min-width:0">
+                        <div class="row-item-title">{{ a.event.title }}</div>
+                        <div class="row-item-sub">{{ a.session.label }}</div>
+                      </div>
+                    </div>
+                    <div class="row-item-meta">
+                      <span class="pill {% if a.check_type == 'check_in' %}pill-participant{% else %}pill-worker{% endif %}">{{ a.get_check_type_display }}</span>
+                    </div>
+                  </div>
+                {% endfor %}
+              </div>
+            {% else %}
+              <div class="empty-state" style="padding:14px 8px"><p>No check-ins recorded yet.</p></div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -18,6 +18,7 @@ from django.db import transaction
 from django.utils.text import slugify
 
 from apps.core.models import AuditLog
+from apps.core.services import NotificationService
 from apps.people.models import Person
 
 from .models import User
@@ -102,6 +103,11 @@ class AdministratorService:
             administrator=requested_by,
             action=f"Created administrator '{username}' ({user.get_role_display()}) from {person.full_name} ({person.person_id})",
             model_name='User', object_id=str(user.id),
+        )
+        NotificationService.notify(
+            title='New Administrator',
+            message=f"{person.full_name} was made a {user.get_role_display()}.",
+            link_url='/dashboard/administrators/',
         )
 
         return NewCredentials(user=user, username=username, temporary_password=temp_password, email_sent=email_sent)

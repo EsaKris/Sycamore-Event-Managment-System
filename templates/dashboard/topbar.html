@@ -1,0 +1,35 @@
+<header class="topbar">
+  <div style="display:flex;align-items:center;gap:14px">
+    <button class="icon-btn" id="sidebar-toggle" style="display:none" aria-label="Toggle menu">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+    <div class="global-search" id="global-search" style="position:relative">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>
+      <input id="global-search-input" type="text" placeholder="Search people, registrations, events…" autocomplete="off">
+      <kbd>&#8984;K</kbd>
+      <div id="global-search-results" class="search-dropdown"></div>
+    </div>
+  </div>
+
+  <div class="topbar-actions">
+    <button class="icon-btn" id="theme-toggle" aria-label="Toggle theme">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36a5.4 5.4 0 0 1-7.54-7.54C13.92 3.04 13.46 3 13 3Z"/></svg>
+    </button>
+    <div style="position:relative" id="notif-wrap">
+      <button class="icon-btn" id="notif-bell" aria-label="Notifications">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <span class="dot" id="notif-dot" style="display:none"></span>
+      </button>
+      <div id="notif-dropdown" class="search-dropdown" style="width:340px;right:0;left:auto"></div>
+    </div>
+    <div class="profile-chip" title="{{ request.user.get_full_name|default:request.user.username }} · {{ request.user.get_role_display }}">
+      <div class="avatar">{{ request.user.first_name|slice:":1"|default:request.user.username|slice:":1"|upper }}</div>
+    </div>
+    <form method="post" action="{% url 'dashboard:logout' %}" style="display:contents">
+      {% csrf_token %}
+      <button type="submit" class="icon-btn" aria-label="Log out" title="Log out">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
+      </button>
+    </form>
+  </div>
+</header>

@@ -165,6 +165,15 @@ class CampaignService:
         campaign.sent_at = timezone.now()
         campaign.save(update_fields=['status', 'sent_at'])
 
+        if failed > 0:
+            from apps.core.services import NotificationService
+            NotificationService.notify(
+                title='Email Failed',
+                message=f"{failed} of {sent + failed} email(s) failed to send in campaign '{campaign.name}'.",
+                level='warning',
+                link_url=f'/dashboard/campaigns/{campaign.pk}/',
+            )
+
         return {'sent': sent, 'failed': failed}
 
     @staticmethod

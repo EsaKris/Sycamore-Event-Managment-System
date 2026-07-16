@@ -1,0 +1,88 @@
+{% extends 'dashboard/base.html' %}
+{% block title %}{% if event %}Edit Event{% else %}New Event{% endif %}{% endblock %}
+{% block body %}
+<div class="app-shell">
+  {% include 'dashboard/partials/sidebar.html' %}
+  <div class="main-content">
+    {% include 'dashboard/partials/topbar.html' %}
+    <div class="content-inner">
+
+      <div class="page-header">
+        <div>
+          <div class="page-eyebrow"><a href="{% url 'events:list' %}" class="text-muted">Events</a> / {% if event %}Edit{% else %}New{% endif %}</div>
+          <h1 class="page-title">{% if event %}{{ event.title }}{% else %}New Event{% endif %}</h1>
+        </div>
+      </div>
+
+      <div class="card" style="max-width:640px">
+        <form method="post" enctype="multipart/form-data">
+          {% csrf_token %}
+          <div class="form-grid" style="grid-template-columns:2fr 1fr">
+            <div class="field-group">
+              <label class="field-label">Title</label>
+              {{ form.title }}
+              {% if form.title.errors %}<div class="field-error">{{ form.title.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="field-group">
+              <label class="field-label">Year</label>
+              {{ form.year }}
+            </div>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Theme</label>
+            {{ form.theme }}
+          </div>
+          <div class="field-group">
+            <label class="field-label">Description</label>
+            {{ form.description }}
+          </div>
+          <div class="field-group">
+            <label class="field-label">Venue</label>
+            {{ form.venue }}
+          </div>
+          <div class="form-grid" style="grid-template-columns:1fr 1fr">
+            <div class="field-group">
+              <label class="field-label">Start date</label>
+              {{ form.start_date }}
+            </div>
+            <div class="field-group">
+              <label class="field-label">End date</label>
+              {{ form.end_date }}
+              {% if form.end_date.errors %}<div class="field-error">{{ form.end_date.errors.0 }}</div>{% endif %}
+            </div>
+          </div>
+          <div class="form-grid" style="grid-template-columns:1fr 1fr">
+            <div class="field-group">
+              <label class="field-label">Max capacity</label>
+              {{ form.max_capacity }}
+            </div>
+            <div class="field-group">
+              <label class="field-label">Colour theme</label>
+              {{ form.color_theme }}
+            </div>
+          </div>
+          <div class="form-grid" style="grid-template-columns:1fr 1fr">
+            <div class="field-group">
+              <label class="field-label">Banner image</label>
+              {{ form.banner }}
+            </div>
+            <div class="field-group">
+              <label class="field-label">Logo</label>
+              {{ form.logo }}
+            </div>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Status</label>
+            {{ form.status }}
+          </div>
+          <div class="form-actions">
+            <a href="{% url 'events:list' %}" class="btn btn-ghost">Cancel</a>
+            <button type="submit" class="btn btn-primary">Save</button>
+          </div>
+        </form>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}
