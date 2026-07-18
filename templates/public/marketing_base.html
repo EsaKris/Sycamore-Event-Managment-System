@@ -1,0 +1,45 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}{{ settings.system_name|default:"SEMS" }}{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'registrations/public/css/tailwind.css' %}">
+  <style>
+    @font-face { font-family: 'Space Grotesk'; src: url('/static/dashboard/fonts/SpaceGrotesk.ttf') format('truetype'); font-weight: 300 700; font-display: swap; }
+    @font-face { font-family: 'Inter'; src: url('/static/dashboard/fonts/Inter.ttf') format('truetype'); font-weight: 100 900; font-display: swap; }
+    body { font-family: 'Inter', 'Segoe UI', sans-serif; }
+    .font-display { font-family: 'Space Grotesk', 'Segoe UI', sans-serif; }
+    details > summary { list-style: none; }
+    details > summary::-webkit-details-marker { display: none; }
+    details[open] .faq-chevron { transform: rotate(45deg); }
+  </style>
+</head>
+<body class="bg-[#0B0E14] text-[#EDEFF3] min-h-screen">
+
+  <header class="fixed top-0 inset-x-0 z-40 border-b border-[#212836] bg-[#0B0E14]/85 backdrop-blur">
+    <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-lg bg-[#D4A24C]/10 border border-[#D4A24C] flex items-center justify-center text-[#D4A24C] font-display font-bold text-sm">SY</div>
+        <div>
+          <div class="font-display font-semibold text-sm leading-tight">{{ settings.system_name|default:"SEMS" }}</div>
+          <div class="text-[10px] uppercase tracking-wide text-[#6B7386] leading-tight">{{ settings.church_name|default:"Again and Afresh Church" }}</div>
+        </div>
+      </div>
+      {% if event %}
+        <a href="{% url 'public:register_default' %}" class="bg-[#D4A24C] hover:bg-[#E8B85E] text-[#1a1305] font-semibold text-xs md:text-sm rounded-full px-4 md:px-6 py-2.5 transition-colors">Register now</a>
+      {% endif %}
+    </div>
+  </header>
+
+  <main class="pt-[73px]">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="border-t border-[#212836] py-10 text-center text-[11px] text-[#6B7386] px-6">
+    {{ settings.church_name|default:"Again and Afresh Church" }} · Powered by {{ settings.system_name|default:"SEMS" }}
+  </footer>
+
+</body>
+</html>

@@ -1,0 +1,175 @@
+{% extends 'public/marketing_base.html' %}
+{% block title %}{% if event %}{{ event.title }}{% else %}{{ settings.system_name|default:"SEMS" }}{% endif %}{% endblock %}
+{% block content %}
+
+{% if not event %}
+
+  <section class="min-h-[70vh] flex items-center justify-center px-6 text-center">
+    <div>
+      <div class="text-[11px] font-semibold uppercase tracking-wider text-[#D4A24C] mb-3">{{ settings.church_name|default:"Again and Afresh Church" }}</div>
+      <h1 class="font-display text-4xl md:text-6xl font-semibold mb-4">Nothing live<br>right now</h1>
+      <p class="text-[#8B93A3] text-sm max-w-sm mx-auto">Check back soon — the next conference will show up here as soon as it opens.</p>
+    </div>
+  </section>
+
+{% else %}
+
+  {# ---------------------------------------------------------------- Hero ---------------------------------------------------------------- #}
+  <section class="relative overflow-hidden px-6 pt-20 pb-24 md:pt-28 md:pb-32 text-center">
+    <div class="absolute inset-0 -z-10 opacity-40" style="background: radial-gradient(ellipse at 50% 0%, rgba(212,162,76,0.18), transparent 60%);"></div>
+    {% if event.banner %}
+      <div class="absolute inset-0 -z-20">
+        <img src="{{ event.banner.url }}" alt="" class="w-full h-full object-cover opacity-20">
+        <div class="absolute inset-0 bg-gradient-to-b from-[#0B0E14]/60 via-[#0B0E14]/85 to-[#0B0E14]"></div>
+      </div>
+    {% endif %}
+
+    <div class="text-[11px] font-semibold uppercase tracking-wider text-[#D4A24C] mb-4">
+      {{ event.start_date|date:"M j" }}–{{ event.end_date|date:"M j, Y" }}{% if event.venue %} · {{ event.venue }}{% endif %}
+    </div>
+    <h1 class="font-display text-5xl md:text-7xl lg:text-8xl font-semibold leading-[0.95] mb-5 max-w-4xl mx-auto">
+      {{ event.title }}
+    </h1>
+    {% if event.theme %}
+      <p class="text-[#A6ADBB] text-base md:text-lg italic mb-10 max-w-xl mx-auto">"{{ event.theme }}"</p>
+    {% else %}
+      <div class="mb-10"></div>
+    {% endif %}
+
+    <div class="flex flex-col sm:flex-row items-center justify-center gap-3 mb-14">
+      <a href="{% url 'public:register_default' %}" class="w-full sm:w-auto bg-[#D4A24C] hover:bg-[#E8B85E] text-[#1a1305] font-semibold text-sm rounded-full px-8 py-3.5 transition-colors">Register now</a>
+      <a href="#about" class="w-full sm:w-auto border border-[#212836] hover:border-[#D4A24C]/50 text-[#EDEFF3] font-medium text-sm rounded-full px-8 py-3.5 transition-colors">Learn more</a>
+    </div>
+
+    {# Countdown #}
+    <div id="hero-countdown" class="inline-flex items-end gap-4 md:gap-6 mx-auto" data-target="{{ event.start_date|date:'c' }}">
+      <div class="flex flex-col items-center min-w-[52px]"><span class="font-display text-3xl md:text-4xl font-semibold" data-unit="days">–</span><span class="text-[10px] uppercase tracking-wide text-[#6B7386] mt-1">Days</span></div>
+      <span class="font-display text-2xl text-[#6B7386] pb-4">:</span>
+      <div class="flex flex-col items-center min-w-[52px]"><span class="font-display text-3xl md:text-4xl font-semibold" data-unit="hours">–</span><span class="text-[10px] uppercase tracking-wide text-[#6B7386] mt-1">Hours</span></div>
+      <span class="font-display text-2xl text-[#6B7386] pb-4">:</span>
+      <div class="flex flex-col items-center min-w-[52px]"><span class="font-display text-3xl md:text-4xl font-semibold" data-unit="minutes">–</span><span class="text-[10px] uppercase tracking-wide text-[#6B7386] mt-1">Minutes</span></div>
+      <span class="font-display text-2xl text-[#6B7386] pb-4">:</span>
+      <div class="flex flex-col items-center min-w-[52px]"><span class="font-display text-3xl md:text-4xl font-semibold" data-unit="seconds">–</span><span class="text-[10px] uppercase tracking-wide text-[#6B7386] mt-1">Seconds</span></div>
+    </div>
+  </section>
+
+  {# ---------------------------------------------------------------- About ---------------------------------------------------------------- #}
+  <section id="about" class="px-6 py-16 md:py-24 border-t border-[#212836]">
+    <div class="max-w-3xl mx-auto text-center">
+      <div class="text-[11px] font-semibold uppercase tracking-wider text-[#D4A24C] mb-3">About</div>
+      <h2 class="font-display text-3xl md:text-4xl font-semibold mb-6">What to expect</h2>
+      {% if event.description %}
+        <p class="text-[#A6ADBB] text-sm md:text-base leading-relaxed whitespace-pre-line">{{ event.description }}</p>
+      {% else %}
+        <p class="text-[#A6ADBB] text-sm md:text-base leading-relaxed">
+          Join {{ settings.church_name|default:"us" }} for {{ event.title }} — a time set apart for worship, the word,
+          and fellowship. Free to attend, open to everyone, and worth clearing your calendar for.
+        </p>
+      {% endif %}
+    </div>
+  </section>
+
+  {# ---------------------------------------------------------------- Who should attend ---------------------------------------------------------------- #}
+  <section class="px-6 py-16 md:py-24 border-t border-[#212836] bg-[#0D1119]">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-10">
+        <div class="text-[11px] font-semibold uppercase tracking-wider text-[#D4A24C] mb-3">Who's it for</div>
+        <h2 class="font-display text-3xl md:text-4xl font-semibold">This is for everyone</h2>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <div class="bg-[#12161F] border border-[#212836] rounded-2xl p-6">
+          <div class="text-[10px] font-semibold uppercase tracking-wider text-[#D4A24C] mb-1">Everyone</div>
+          <div class="text-xs text-[#6B7386] mb-3">{{ event.start_date|date:"M j" }}–{{ event.end_date|date:"M j" }}</div>
+          <p class="text-sm text-[#A6ADBB] leading-relaxed">Come as you are — no denomination, background, or prior attendance required. Just bring an open heart.</p>
+        </div>
+        <div class="bg-[#12161F] border border-[#212836] rounded-2xl p-6">
+          <div class="text-[10px] font-semibold uppercase tracking-wider text-[#D4A24C] mb-1">First-timers</div>
+          <div class="text-xs text-[#6B7386] mb-3">Welcome desk on arrival</div>
+          <p class="text-sm text-[#A6ADBB] leading-relaxed">New here? Registration takes under two minutes, and there's always someone to help you find your seat.</p>
+        </div>
+        <div class="bg-[#12161F] border border-[#212836] rounded-2xl p-6">
+          <div class="text-[10px] font-semibold uppercase tracking-wider text-[#D4A24C] mb-1">Returning attendees</div>
+          <div class="text-xs text-[#6B7386] mb-3">We'll remember you</div>
+          <p class="text-sm text-[#A6ADBB] leading-relaxed">Been before? Say so on the form and we'll pull up your details — no need to type everything again.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {# ---------------------------------------------------------------- FAQ ---------------------------------------------------------------- #}
+  <section class="px-6 py-16 md:py-24 border-t border-[#212836]">
+    <div class="max-w-2xl mx-auto">
+      <div class="text-center mb-10">
+        <div class="text-[11px] font-semibold uppercase tracking-wider text-[#D4A24C] mb-3">FAQs</div>
+        <h2 class="font-display text-3xl md:text-4xl font-semibold">Good to know</h2>
+      </div>
+      <div class="divide-y divide-[#212836] border-t border-b border-[#212836]">
+        <details class="group py-5">
+          <summary class="flex items-center justify-between cursor-pointer">
+            <span class="text-sm font-medium">Is registration free?</span>
+            <span class="faq-chevron text-[#D4A24C] text-lg transition-transform">+</span>
+          </summary>
+          <p class="text-sm text-[#8B93A3] mt-3 leading-relaxed">Yes — registration is completely free. If you'd like to give toward the conference, there's an optional link on your confirmation page.</p>
+        </details>
+        <details class="group py-5">
+          <summary class="flex items-center justify-between cursor-pointer">
+            <span class="text-sm font-medium">Who can attend?</span>
+            <span class="faq-chevron text-[#D4A24C] text-lg transition-transform">+</span>
+          </summary>
+          <p class="text-sm text-[#8B93A3] mt-3 leading-relaxed">Everyone is welcome, regardless of church background, denomination, or whether you've attended before.</p>
+        </details>
+        <details class="group py-5">
+          <summary class="flex items-center justify-between cursor-pointer">
+            <span class="text-sm font-medium">What if I've attended a Sycamore event before?</span>
+            <span class="faq-chevron text-[#D4A24C] text-lg transition-transform">+</span>
+          </summary>
+          <p class="text-sm text-[#8B93A3] mt-3 leading-relaxed">Say so on the registration form — enter the phone number you used last time and we'll pre-fill what we already have on file.</p>
+        </details>
+        <details class="group py-5">
+          <summary class="flex items-center justify-between cursor-pointer">
+            <span class="text-sm font-medium">Where is the venue?</span>
+            <span class="faq-chevron text-[#D4A24C] text-lg transition-transform">+</span>
+          </summary>
+          <p class="text-sm text-[#8B93A3] mt-3 leading-relaxed">{{ event.venue|default:"To be announced — check back closer to the date." }}</p>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  {# ---------------------------------------------------------------- Bottom CTA ---------------------------------------------------------------- #}
+  <section class="px-6 py-20 md:py-28 border-t border-[#212836] text-center bg-[#0D1119]">
+    <div class="text-[11px] font-semibold uppercase tracking-wider text-[#D4A24C] mb-4">{{ event.title }}</div>
+    <h2 class="font-display text-3xl md:text-5xl font-semibold mb-8 max-w-2xl mx-auto">Come with expectation,<br>leave with transformation</h2>
+    <a href="{% url 'public:register_default' %}" class="inline-block bg-[#D4A24C] hover:bg-[#E8B85E] text-[#1a1305] font-semibold text-sm rounded-full px-8 py-3.5 transition-colors">Register now</a>
+    {% if settings.giving_url %}
+      <p class="mt-4">
+        <a href="{{ settings.giving_url }}" target="_blank" rel="noopener" class="text-[13px] text-[#8B93A3] hover:text-[#EDEFF3] transition-colors">Or give toward the conference →</a>
+      </p>
+    {% endif %}
+  </section>
+
+  <script>
+    (function () {
+      var el = document.getElementById('hero-countdown');
+      if (!el) return;
+      var target = new Date(el.dataset.target).getTime();
+
+      function tick() {
+        var diff = Math.max(0, target - Date.now());
+        var days = Math.floor(diff / 86400000);
+        var hours = Math.floor((diff % 86400000) / 3600000);
+        var minutes = Math.floor((diff % 3600000) / 60000);
+        var seconds = Math.floor((diff % 60000) / 1000);
+        el.querySelector('[data-unit="days"]').textContent = days;
+        el.querySelector('[data-unit="hours"]').textContent = String(hours).padStart(2, '0');
+        el.querySelector('[data-unit="minutes"]').textContent = String(minutes).padStart(2, '0');
+        el.querySelector('[data-unit="seconds"]').textContent = String(seconds).padStart(2, '0');
+      }
+      tick();
+      setInterval(tick, 1000);
+    })();
+  </script>
+
+{% endif %}
+
+{% endblock %}

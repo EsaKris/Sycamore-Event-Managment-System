@@ -160,8 +160,25 @@ class SystemSettings(models.Model):
     default_theme_mode = models.CharField(
         max_length=5, choices=[('dark', 'Dark'), ('light', 'Light')], default='dark',
     )
+    giving_url = models.URLField(
+        blank=True,
+        help_text="Where the public site's 'Give' button links to (e.g. a Paystack payment "
+                   "link or your existing giving page). Registration itself is always free — "
+                   "this is a voluntary link, not a payment gate. Leave blank to hide the button.",
+    )
+
+    default_event = models.ForeignKey(
+        'events.Event', null=True, blank=True, on_delete=models.SET_NULL, related_name='+',
+        help_text="Which event '/register/' and the public landing page resolve to when no "
+                   "slug is given — this is what makes the short, shareable URL possible "
+                   "(e.g. sycamore.againandafresh.org/register instead of /register/sycamore-2026/). "
+                   "Event-specific links (/register/<slug>/) keep working regardless, so other "
+                   "concurrent events can still be shared directly. Leave blank if nothing should "
+                   "resolve at the short URL yet.",
+    )
 
     updated_at = models.DateTimeField(auto_now=True)
+
 
     def save(self, *args, **kwargs):
         self.pk = 1

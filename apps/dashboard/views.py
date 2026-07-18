@@ -343,6 +343,7 @@ class SettingsView(SuperAdminRequiredMixin, TemplateView):
         ctx['person_id_prefix'] = django_settings.SEMS_PERSON_ID_PREFIX
         ctx['person_id_digits'] = django_settings.SEMS_PERSON_ID_DIGITS
         ctx['departments'] = Department.objects.order_by('name')
+        ctx['public_events'] = Event.objects.exclude(status=EventStatus.ARCHIVED).order_by('-year')
         return ctx
 
     def post(self, request, *args, **kwargs):
@@ -352,6 +353,9 @@ class SettingsView(SuperAdminRequiredMixin, TemplateView):
         obj.support_email = request.POST.get('support_email', '').strip()
         obj.default_color_theme = request.POST.get('default_color_theme', obj.default_color_theme).strip()
         obj.default_theme_mode = request.POST.get('default_theme_mode', obj.default_theme_mode)
+        obj.giving_url = request.POST.get('giving_url', '').strip()
+        default_event_id = request.POST.get('default_event', '').strip()
+        obj.default_event_id = int(default_event_id) if default_event_id else None
         if request.FILES.get('church_logo'):
             obj.church_logo = request.FILES['church_logo']
         obj.save()

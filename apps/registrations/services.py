@@ -79,3 +79,34 @@ class RegistrationService:
             person_id=person_id, qr_token=qr_token,
         )
         return match.person if match else None
+
+    @classmethod
+    @transaction.atomic
+    def register_public(cls, *, event, person_fields: dict, accommodation_requested: bool = False) -> RegistrationResult:
+        """
+        The public self-registration entrypoint (apps/registrations
+        public_views.py) — no admin involved, no login. There's no
+        visible 'have you attended before?' question here on purpose:
+        showing a stranger a lookup that could surface someone else's
+        record is a privacy risk unacceptable for an unauthenticated
+        form. Instead this matches invisibly, server-side, only against
+        the phone/email the visitor themselves just typed — the same
+        dedup guarantee as the dashboard wizard, without ever exposing
+        anyone else's data.
+
+        Always registers as a Participant — self-service Worker signup
+        needs department/coordinator involvement that belongs in the
+        dashboard, not a public form.
+        """
+        registration_fields = {'category': 'participant', 'accommodation_requested': accommodation_requested}
+
+        existing = PersonService.search(
+            phone_number=person_fields.get('phone_number', ''),
+            email_address=person_fields.get('email_address', ''),
+        )
+        if existing:
+            return cls.register_returning_person(
+                event=event, person=existing.person, updated_fields=person_fields,
+                registration_fields=registration_fields,
+            )
+        return cls.register_new_person(event=event, person_fields=person_fields, registration_fields=registration_fields)

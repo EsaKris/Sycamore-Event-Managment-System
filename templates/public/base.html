@@ -1,0 +1,37 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Register{% endblock %} · {{ settings.system_name|default:"SEMS" }}</title>
+  <link rel="stylesheet" href="{% static 'registrations/public/css/tailwind.css' %}">
+  <style>
+    @font-face { font-family: 'Space Grotesk'; src: url('/static/dashboard/fonts/SpaceGrotesk.ttf') format('truetype'); font-weight: 300 700; font-display: swap; }
+    @font-face { font-family: 'Inter'; src: url('/static/dashboard/fonts/Inter.ttf') format('truetype'); font-weight: 100 900; font-display: swap; }
+    body { font-family: 'Inter', 'Segoe UI', sans-serif; }
+    .font-display { font-family: 'Space Grotesk', 'Segoe UI', sans-serif; }
+  </style>
+</head>
+<body class="bg-[#0B0E14] text-[#EDEFF3] min-h-screen">
+
+  <header class="border-b border-[#212836]">
+    <div class="max-w-2xl mx-auto px-6 py-5 flex items-center gap-3">
+      <div class="w-9 h-9 rounded-lg bg-[#D4A24C]/10 border border-[#D4A24C] flex items-center justify-center text-[#D4A24C] font-display font-bold text-sm">SY</div>
+      <div>
+        <div class="font-display font-semibold text-sm leading-tight">{{ settings.system_name|default:"SEMS" }}</div>
+        <div class="text-[11px] uppercase tracking-wide text-[#6B7386] leading-tight">{{ settings.church_name|default:"Again and Afresh Church" }}</div>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-2xl mx-auto px-6 py-10 md:py-14">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="max-w-2xl mx-auto px-6 py-10 text-center text-[11px] text-[#6B7386]">
+    {{ settings.church_name|default:"Again and Afresh Church" }} · Powered by {{ settings.system_name|default:"SEMS" }}
+  </footer>
+
+</body>
+</html>

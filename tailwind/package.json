@@ -1,0 +1,11 @@
+{
+  "name": "sems-public-site-styles",
+  "private": true,
+  "scripts": {
+    "build-css": "tailwindcss -i input.css -o ../apps/registrations/static/registrations/public/css/tailwind.css --minify",
+    "watch-css": "tailwindcss -i input.css -o ../apps/registrations/static/registrations/public/css/tailwind.css --watch"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.19"
+  }
+}

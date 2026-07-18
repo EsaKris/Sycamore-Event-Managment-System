@@ -59,6 +59,21 @@
                 {% endif %}
                 <input type="file" name="church_logo" class="field-input" accept="image/*">
               </div>
+              <div class="field-group">
+                <label class="field-label">Default event for public site</label>
+                <select name="default_event" class="field-input field-select">
+                  <option value="">— None (short /register/ URL shows "nothing live") —</option>
+                  {% for ev in public_events %}
+                    <option value="{{ ev.id }}" {% if settings.default_event_id == ev.id %}selected{% endif %}>{{ ev.title }} ({{ ev.year }})</option>
+                  {% endfor %}
+                </select>
+                <div class="text-muted" style="font-size:11.5px;margin-top:6px">Which event the public landing page and the short <code>/register/</code> URL resolve to. Other events stay reachable at their own <code>/register/&lt;slug&gt;/</code> link regardless of this setting.</div>
+              </div>
+              <div class="field-group">
+                <label class="field-label">Give button link</label>
+                <input type="url" name="giving_url" class="field-input" value="{{ settings.giving_url }}" placeholder="https://paystack.com/pay/your-link">
+                <div class="text-muted" style="font-size:11.5px;margin-top:6px">Shown as a voluntary "Give" button on the public registration confirmation page. Registration itself is always free. Leave blank to hide the button.</div>
+              </div>
               <div class="form-actions">
                 <button type="submit" class="btn btn-primary">Save settings</button>
               </div>
@@ -101,6 +116,36 @@
               <div class="row-item"><div class="row-item-title">ID prefix</div><div class="row-item-meta cell-sub">{{ person_id_prefix }}</div></div>
               <div class="row-item"><div class="row-item-title">ID digit count</div><div class="row-item-meta cell-sub">{{ person_id_digits }}</div></div>
             </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">Public registration links</div>
+            <div class="card-subtitle">Share these with attendees — no login required. Only events with registration currently open will accept submissions.</div>
+            {% if public_events %}
+              <div class="row-list">
+                {% for ev in public_events %}
+                  <div class="row-item">
+                    <div class="row-item-main">
+                      <div style="min-width:0">
+                        <div class="row-item-title">
+                          {{ ev.title }}
+                          {% if settings.default_event_id == ev.id %}<span class="pill" style="background:rgba(212,162,76,0.15);color:#D4A24C">Default</span>{% endif %}
+                        </div>
+                        {% if settings.default_event_id == ev.id %}
+                          <div class="row-item-sub" style="word-break:break-all">{{ request.scheme }}://{{ request.get_host }}{% url 'public:register_default' %}</div>
+                        {% endif %}
+                        <div class="row-item-sub" style="word-break:break-all">{{ request.scheme }}://{{ request.get_host }}{% url 'public:register' ev.slug %}</div>
+                      </div>
+                    </div>
+                    <div class="row-item-meta">
+                      {% if ev.registration_status == 'open' %}<span class="pill pill-participant">Open</span>{% else %}<span class="pill" style="background:var(--bg-hover);color:var(--text-muted)">{{ ev.get_registration_status_display }}</span>{% endif %}
+                    </div>
+                  </div>
+                {% endfor %}
+              </div>
+            {% else %}
+              <div class="empty-state" style="padding:14px 8px"><p>No events yet.</p></div>
+            {% endif %}
           </div>
 
           <div class="card">

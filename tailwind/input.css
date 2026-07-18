@@ -1,0 +1,8 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Form control base styles matching the widget classes hardcoded in public_forms.py */
+input[type="text"], input[type="email"], input[type="tel"], input[type="date"], select, textarea {
+  font-family: 'Inter', sans-serif;
+}

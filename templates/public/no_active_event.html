@@ -1,0 +1,18 @@
+{% extends 'public/base.html' %}
+{% block title %}Registration{% endblock %}
+{% block content %}
+
+  <div class="text-center py-10">
+    <div class="w-14 h-14 rounded-full bg-[#8AB4E8]/10 border border-[#8AB4E8] flex items-center justify-center mx-auto mb-5">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#8AB4E8" stroke-width="2"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="9"/></svg>
+    </div>
+    <h1 class="font-display text-2xl font-semibold mb-2">No open registration right now</h1>
+    <p class="text-[#8B93A3] text-sm max-w-sm mx-auto">
+      There's no event currently set up at this address. Check back soon, or contact the church office for details.
+    </p>
+    {% if settings.support_email %}
+      <p class="text-[#6B7386] text-xs mt-4">Questions? <a href="mailto:{{ settings.support_email }}" class="text-[#D4A24C]">{{ settings.support_email }}</a></p>
+    {% endif %}
+  </div>
+
+{% endblock %}

@@ -1,0 +1,38 @@
+{% extends 'public/base.html' %}
+{% block title %}You're registered — {{ event.title }}{% endblock %}
+{% block content %}
+
+  <div class="text-center mb-8">
+    <div class="w-14 h-14 rounded-full bg-[#3ECFB0]/10 border border-[#3ECFB0] flex items-center justify-center mx-auto mb-5">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3ECFB0" stroke-width="2.4"><path d="M20 6L9 17l-5-5"/></svg>
+    </div>
+    <h1 class="font-display text-2xl font-semibold mb-2">You're registered, {{ data.full_name }}!</h1>
+    <p class="text-[#8B93A3] text-sm">{{ data.event_title }}</p>
+  </div>
+
+  <div class="bg-[#12161F] border border-[#212836] rounded-2xl p-6 md:p-8 mb-6">
+    <div class="flex items-center justify-between py-3 border-b border-[#212836]">
+      <span class="text-[#8B93A3] text-sm">Registration number</span>
+      <span class="font-display font-semibold">{{ data.registration_number }}</span>
+    </div>
+    <div class="flex items-center justify-between py-3">
+      <span class="text-[#8B93A3] text-sm">Your permanent ID</span>
+      <span class="font-display font-semibold">{{ data.person_id }}</span>
+    </div>
+    <p class="text-[11px] text-[#6B7386] mt-2">
+      This ID stays with you across every future conference — save this page or take a screenshot. Your ID card and QR check-in code will be ready at the event.
+    </p>
+  </div>
+
+  {% if settings.giving_url %}
+    <a href="{{ settings.giving_url }}" target="_blank" rel="noopener" class="block w-full text-center bg-[#D4A24C] hover:bg-[#E8B85E] text-[#1a1305] font-semibold text-sm rounded-lg py-3.5 transition-colors mb-3">
+      Give &nbsp;·&nbsp; Support this conference
+    </a>
+    <p class="text-center text-[11px] text-[#6B7386] mb-6">Registration is free — giving is completely optional.</p>
+  {% endif %}
+
+  <div class="text-center">
+    <a href="{% url 'public:register' event.slug %}" class="text-[13px] text-[#8B93A3] hover:text-[#EDEFF3] transition-colors">Register someone else →</a>
+  </div>
+
+{% endblock %}

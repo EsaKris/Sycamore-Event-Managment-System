@@ -14,11 +14,18 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
 
-admin.site.site_header = 'SEMS System Administration (Dev/Maintenance)'
-admin.site.site_title = 'SEMS Admin'
+from apps.registrations import public_views
+
+admin.site.site_header = 'Sycamore System Administration (Dev/Maintenance)'
+admin.site.site_title = 'Esa Admin'
 
 urlpatterns = [
     path('sys-admin/', admin.site.urls),
+    # The marketing/landing page — resolves the same SystemSettings.default_event
+    # as the short '/register/' URL, so "which event is live right now" only
+    # has to be set in one place (Settings → Default event for public site).
+    path('', public_views.landing, name='landing'),
+    path('register/', include('apps.registrations.public_urls')),
     path('dashboard/', include('apps.dashboard.urls')),
     path('dashboard/registrations/', include('apps.registrations.urls')),
     path('dashboard/attendance/', include('apps.attendance.urls')),
