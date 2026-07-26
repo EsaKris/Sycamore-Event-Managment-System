@@ -26,7 +26,7 @@ class PublicRegistrationForm(forms.Form):
     # same way regardless of the answer given here.
     has_attended_before = forms.ChoiceField(
         choices=[('no', "No, this is my first time"), ('yes', 'Yes, I have attended before')],
-        widget=forms.RadioSelect, initial='no',
+        widget=forms.HiddenInput, initial='no',
     )
 
     first_name = forms.CharField(max_length=100, widget=forms.TextInput(attrs={'class': TEXT, 'placeholder': 'First name'}))

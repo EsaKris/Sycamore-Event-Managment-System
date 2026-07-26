@@ -4,28 +4,134 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% block title %}Register{% endblock %} · {{ settings.system_name|default:"SEMS" }}</title>
+  
+  <!-- Primary Meta Tags -->
+  <title>{% block title %}Register{% endblock %} || {{ settings.system_name|default:"SEMS" }}</title>
+  <meta name="title" content="{% block seo_title %}Register · {{ settings.system_name|default:'SEMS' }}{% endblock %}">
+  <meta name="description" content="{% block meta_description %}Register for upcoming events at {{ settings.church_name|default:'Again and Afresh Church' }}. Reserve your spot today.{% endblock %}">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="{{ request.build_absolute_uri }}">
+
+  <!-- Favicons -->
+  <link rel="icon" type="image/png" href="{% static 'dashboard/img/logo.png' %}">
+  <link rel="apple-touch-icon" href="{% static 'dashboard/img/logo.png' %}">
+
+  <!-- Open Graph / Facebook / WhatsApp -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="{{ request.build_absolute_uri }}">
+  <meta property="og:title" content="{% block og_title %}Register · {{ settings.system_name|default:'SEMS' }}{% endblock %}">
+  <meta property="og:description" content="{% block og_description %}Register for upcoming events at {{ settings.church_name|default:'Again and Afresh Church' }}. Reserve your spot today.{% endblock %}">
+  <meta property="og:image" content="{% block og_image %}{{ request.scheme }}://{{ request.get_host }}{% static 'dashboard/img/logo.png' %}{% endblock %}">
+
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary_large_image">
+  <meta property="twitter:url" content="{{ request.build_absolute_uri }}">
+  <meta property="twitter:title" content="{% block twitter_title %}Register · {{ settings.system_name|default:'SEMS' }}{% endblock %}">
+  <meta property="twitter:description" content="{% block twitter_description %}Register for upcoming events at {{ settings.church_name|default:'Again and Afresh Church' }}. Reserve your spot today.{% endblock %}">
+  <meta property="twitter:image" content="{% block twitter_image %}{{ request.scheme }}://{{ request.get_host }}{% static 'dashboard/img/logo.png' %}{% endblock %}">
+
+  <!-- Stylesheets -->
   <link rel="stylesheet" href="{% static 'registrations/public/css/tailwind.css' %}">
   <style>
     @font-face { font-family: 'Space Grotesk'; src: url('/static/dashboard/fonts/SpaceGrotesk.ttf') format('truetype'); font-weight: 300 700; font-display: swap; }
     @font-face { font-family: 'Inter'; src: url('/static/dashboard/fonts/Inter.ttf') format('truetype'); font-weight: 100 900; font-display: swap; }
     body { font-family: 'Inter', 'Segoe UI', sans-serif; }
     .font-display { font-family: 'Space Grotesk', 'Segoe UI', sans-serif; }
+
+    /* --- NAVBAR CUSTOM STYLES --- */
+    .give-btn {
+      --cut: 8px;
+      background: linear-gradient(150deg, #f0d38a 0%, #d4a843 50%, #b3872f 100%);
+      color: #0a0a08;
+      font-weight: 700;
+      padding: 0.35rem 1.2rem;
+      font-size: 0.8rem;
+      letter-spacing: 0.04em;
+      border: none;
+      cursor: pointer;
+      clip-path: polygon(0% 0%, calc(100% - var(--cut)) 0%, calc(100% - var(--cut)) var(--cut), 100% var(--cut), 100% 100%, var(--cut) 100%, var(--cut) calc(100% - var(--cut)), 0% calc(100% - var(--cut)));
+      border-radius: 6px;
+      transition: transform 0.25s ease, box-shadow 0.3s ease;
+      box-shadow: 0 4px 24px rgba(212, 168, 67, 0.25);
+    }
+    .give-btn:hover {
+      transform: scale(1.06);
+      box-shadow: 0 6px 32px rgba(212, 168, 67, 0.45);
+    }
+
+    .hamburger-line {
+      display: block;
+      height: 2px;
+      width: 100%;
+      background: #ffffe6;
+      border-radius: 999px;
+      transition: all 0.3s ease;
+      transform-origin: center;
+    }
+    .hamburger.active .hamburger-line:nth-child(1) {
+      transform: translateY(9px) rotate(45deg);
+    }
+    .hamburger.active .hamburger-line:nth-child(2) {
+      opacity: 0;
+      transform: scaleX(0);
+    }
+    .hamburger.active .hamburger-line:nth-child(3) {
+      transform: translateY(-9px) rotate(-45deg);
+    }
+
+    .mobile-menu {
+      transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.4s ease, visibility 0.4s ease;
+    }
+    .mobile-menu.active {
+      transform: translateY(0);
+      opacity: 1;
+      visibility: visible;
+    }
   </style>
 </head>
-<body class="bg-[#0B0E14] text-[#EDEFF3] min-h-screen">
+<body class="bg-[#0B0E14] text-[#EDEFF3] min-h-screen pt-20 md:pt-24">
 
-  <header class="border-b border-[#212836]">
-    <div class="max-w-2xl mx-auto px-6 py-5 flex items-center gap-3">
-      <div class="w-9 h-9 rounded-lg bg-[#D4A24C]/10 border border-[#D4A24C] flex items-center justify-center text-[#D4A24C] font-display font-bold text-sm">SY</div>
-      <div>
-        <div class="font-display font-semibold text-sm leading-tight">{{ settings.system_name|default:"SEMS" }}</div>
-        <div class="text-[11px] uppercase tracking-wide text-[#6B7386] leading-tight">{{ settings.church_name|default:"Again and Afresh Church" }}</div>
+  <!-- Navbar -->
+  <nav aria-label="Primary" class="fixed top-0 left-0 right-0 z-50 bg-[#0B0E14]/80 backdrop-blur-md border-b border-[#212836]">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between min-h-[64px]">
+      <div class="flex items-center gap-3">
+        <a href="/" class="flex items-center gap-3">
+          <img src="{% static 'dashboard/img/logo.png' %}" alt="Sycamore Logo" class="brand-logo h-9 w-auto max-h-9 object-contain shrink-0">
+          <div>
+            <div class="font-display font-semibold text-sm leading-tight text-[#EDEFF3]">
+              {{ settings.system_name|default:"SEMS" }}
+            </div>
+            <div class="text-[11px] uppercase tracking-wide text-[#6B7386] leading-tight">
+              {{ settings.church_name|default:"Again and Afresh Church" }}
+            </div>
+          </div>
+        </a>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <a href="#" class="give-btn">Give</a>
+        <button class="hamburger flex flex-col justify-between w-[26px] h-[20px] bg-transparent border-none cursor-pointer p-0 flex-shrink-0" id="hamburgerBtn" aria-label="Toggle menu" aria-expanded="false" aria-controls="mobileMenu">
+          <span class="hamburger-line"></span>
+          <span class="hamburger-line"></span>
+          <span class="hamburger-line"></span>
+        </button>
       </div>
     </div>
-  </header>
+  </nav>
 
-  <main class="max-w-2xl mx-auto px-6 py-10 md:py-14">
+  <!-- Mobile Menu -->
+  <div class="mobile-menu fixed top-[64px] left-0 right-0 z-40 bg-[#0B0E14]/95 backdrop-blur-xl border-b border-[#212836] -translate-y-full opacity-0 invisible" id="mobileMenu">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <ul class="flex flex-col items-center gap-4 list-none">
+        <li><a href="#about" class="text-white/80 hover:text-[#EDEFF3] text-lg font-medium transition border-b border-transparent hover:border-[#D4A24C] pb-1">About</a></li>
+        <li><a href="#testimonies" class="text-white/80 hover:text-[#EDEFF3] text-lg font-medium transition border-b border-transparent hover:border-[#D4A24C] pb-1">Testimonies</a></li>
+        <li><a href="#attend" class="text-white/80 hover:text-[#EDEFF3] text-lg font-medium transition border-b border-transparent hover:border-[#D4A24C] pb-1">Who Should Attend</a></li>
+        <li><a href="#" class="text-white/80 hover:text-[#EDEFF3] text-lg font-medium transition border-b border-transparent hover:border-[#D4A24C] pb-1">Contact</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <main class="max-w-2xl mx-auto px-6 py-8 md:py-12">
     {% block content %}{% endblock %}
   </main>
 
@@ -33,5 +139,46 @@
     {{ settings.church_name|default:"Again and Afresh Church" }} · Powered by {{ settings.system_name|default:"SEMS" }}
   </footer>
 
+  <!-- Hamburger Toggle Script -->
+  <script>
+    (function() {
+      const btn = document.getElementById('hamburgerBtn');
+      const menu = document.getElementById('mobileMenu');
+
+      function toggle() {
+        const open = menu.classList.toggle('active');
+        btn.classList.toggle('active');
+        btn.setAttribute('aria-expanded', open);
+      }
+
+      btn.addEventListener('click', toggle);
+
+      menu.querySelectorAll('a').forEach(link => {
+        link.addEventListener('click', () => {
+          menu.classList.remove('active');
+          btn.classList.remove('active');
+          btn.setAttribute('aria-expanded', 'false');
+        });
+      });
+
+      document.addEventListener('click', (e) => {
+        const inNav = e.target.closest('nav') || e.target.closest('.mobile-menu');
+        if (!inNav && menu.classList.contains('active')) {
+          menu.classList.remove('active');
+          btn.classList.remove('active');
+          btn.setAttribute('aria-expanded', 'false');
+        }
+      });
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && menu.classList.contains('active')) {
+          menu.classList.remove('active');
+          btn.classList.remove('active');
+          btn.setAttribute('aria-expanded', 'false');
+          btn.focus();
+        }
+      });
+    })();
+  </script>
 </body>
 </html>

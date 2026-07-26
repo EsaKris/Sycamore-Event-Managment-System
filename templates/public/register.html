@@ -11,197 +11,269 @@
     {% if event.theme %}<p class="text-[#6B7386] text-sm mt-1 italic">"{{ event.theme }}"</p>{% endif %}
   </div>
 
-  {% if rate_limited %}
-    <div class="mb-6 rounded-lg border border-[#E2685A]/35 bg-[#E2685A]/10 text-[#F3B4AC] text-sm px-4 py-3">
-      Too many submissions from this connection recently. Please try again in a little while.
+  {# --- Choice screen: the only thing visible until a choice is made --- #}
+  <div id="choice-screen" class="bg-[#12161F] border border-[#212836] rounded-2xl p-6 md:p-10 text-center">
+    <p class="text-sm text-[#A6ADBB] mb-6">Have you Registered for Sycamore'26?</p>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-md mx-auto">
+      <button type="button" data-choice="no" class="choice-btn rounded-xl border border-[#212836] bg-[#0B0E14] hover:border-[#D4A24C] px-6 py-5 text-left transition-colors">
+        <span class="block font-display font-semibold text-base mb-1">No</span>
+        <span class="block text-xs text-[#8B93A3]">This is my first time</span>
+      </button>
+      <button type="button" data-choice="yes" class="choice-btn rounded-xl border border-[#212836] bg-[#0B0E14] hover:border-[#D4A24C] px-6 py-5 text-left transition-colors">
+        <span class="block font-display font-semibold text-base mb-1">Yes</span>
+        <span class="block text-xs text-[#8B93A3]">I've regisered before</span>
+      </button>
     </div>
-  {% endif %}
+  </div>
 
-  {% if form.non_field_errors %}
-    <div class="mb-6 rounded-lg border border-[#E2685A]/35 bg-[#E2685A]/10 text-[#F3B4AC] text-sm px-4 py-3">
-      {{ form.non_field_errors.0 }}
-    </div>
-  {% endif %}
+  {# --- Modal: hidden until a choice opens it --- #}
+  <div id="modal-overlay" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-start md:items-center justify-center p-4 overflow-y-auto">
+    <div class="w-full max-w-xl bg-[#12161F] border border-[#212836] rounded-2xl p-6 md:p-8 my-8 relative">
 
-  <form method="post" id="reg-form" class="bg-[#12161F] border border-[#212836] rounded-2xl p-6 md:p-8" novalidate>
-    {% csrf_token %}
+      <button type="button" id="modal-close" aria-label="Close" class="absolute top-4 right-4 w-8 h-8 rounded-lg flex items-center justify-center text-[#8B93A3] hover:text-[#EDEFF3] hover:bg-[#1D2330] transition-colors">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
 
-    {# Honeypot — invisible to real visitors, never rendered as a normal field #}
-    <div class="absolute -left-[9999px]" aria-hidden="true">
-      <label for="{{ form.website.id_for_label }}">Website</label>
-      {{ form.website }}
-    </div>
+      {% if rate_limited %}
+        <div class="mb-6 rounded-lg border border-[#E2685A]/35 bg-[#E2685A]/10 text-[#F3B4AC] text-sm px-4 py-3">
+          Too many submissions from this connection recently. Please try again in a little while.
+        </div>
+      {% endif %}
+      {% if form.non_field_errors %}
+        <div class="mb-6 rounded-lg border border-[#E2685A]/35 bg-[#E2685A]/10 text-[#F3B4AC] text-sm px-4 py-3">
+          {{ form.non_field_errors.0 }}
+        </div>
+      {% endif %}
 
-    {# --- Have you attended before? --- #}
-    <div class="mb-6 pb-6 border-b border-[#212836]">
-      <label class="block text-xs font-medium text-[#A6ADBB] mb-2.5">Have you attended a Sycamore event before?</label>
-      <div class="grid grid-cols-2 gap-3">
-        {% for radio in form.has_attended_before %}
-          <label class="attend-choice flex items-center justify-center gap-2 rounded-lg border border-[#212836] bg-[#0B0E14] px-4 py-3 text-sm text-[#A6ADBB] cursor-pointer transition-colors">
-            {{ radio.tag }}
-            <span>{{ radio.choice_label }}</span>
+      <form method="post" id="reg-form" novalidate>
+        {% csrf_token %}
+        {{ form.has_attended_before }}
+
+        {# Honeypot — invisible to real visitors, never rendered as a normal field #}
+        <div class="absolute -left-[9999px]" aria-hidden="true">
+          <label for="{{ form.website.id_for_label }}">Website</label>
+          {{ form.website }}
+        </div>
+
+        <div id="modal-title" class="mb-6">
+          <h2 class="font-display text-xl font-semibold" id="modal-title-text">Your details</h2>
+          <p class="text-xs text-[#8B93A3] mt-1" id="modal-subtitle-text"></p>
+        </div>
+
+        {# --- Returning-visitor phone lookup step — only shown for the 'yes' choice --- #}
+        <div id="returning-check" class="hidden mb-6 pb-6 border-b border-[#212836]">
+          <label class="block text-xs font-medium text-[#A6ADBB] mb-1.5">Enter the phone number you used before, and we'll pull up your details</label>
+          <div class="flex gap-2">
+            <input type="tel" id="returning-phone" placeholder="+234..."
+                   class="w-full rounded-lg bg-[#0B0E14] border border-[#212836] px-4 py-3 text-sm text-[#EDEFF3] placeholder:text-[#6B7386] focus:outline-none focus:border-[#D4A24C] transition-colors">
+            <button type="button" id="returning-check-btn"
+                    class="shrink-0 rounded-lg border border-[#D4A24C]/50 text-[#D4A24C] text-sm font-medium px-5 py-3 hover:bg-[#D4A24C]/10 transition-colors">Check</button>
+          </div>
+          <p id="returning-status" class="text-xs mt-2"></p>
+        </div>
+
+        {# --- The rest of the form — visible immediately for 'no', revealed after a check (or skip) for 'yes' --- #}
+        <div id="form-fields">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-medium text-[#A6ADBB] mb-1.5">First name</label>
+              {{ form.first_name }}
+              {% if form.first_name.errors %}<div class="text-[#E2685A] text-xs mt-1">{{ form.first_name.errors.0 }}</div>{% endif %}
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-[#A6ADBB] mb-1.5">Last name</label>
+              {{ form.last_name }}
+              {% if form.last_name.errors %}<div class="text-[#E2685A] text-xs mt-1">{{ form.last_name.errors.0 }}</div>{% endif %}
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+            <div>
+              <label class="block text-xs font-medium text-[#A6ADBB] mb-1.5">Gender</label>
+              {{ form.gender }}
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-[#A6ADBB] mb-1.5">Date of birth</label>
+              {{ form.date_of_birth }}
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+            <div>
+              <label class="block text-xs font-medium text-[#A6ADBB] mb-1.5">Phone number</label>
+              {{ form.phone_number }}
+              {% if form.phone_number.errors %}<div class="text-[#E2685A] text-xs mt-1">{{ form.phone_number.errors.0 }}</div>{% endif %}
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-[#A6ADBB] mb-1.5">Email <span class="text-[#6B7386]">(optional)</span></label>
+              {{ form.email_address }}
+            </div>
+          </div>
+
+          <div class="mt-6 pt-6 border-t border-[#212836]">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-medium text-[#A6ADBB] mb-1.5">State</label>
+                {{ form.state }}
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-[#A6ADBB] mb-1.5">Country</label>
+                {{ form.country }}
+              </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+              <div>
+                <label class="block text-xs font-medium text-[#A6ADBB] mb-1.5">Home church <span class="text-[#6B7386]">(optional)</span></label>
+                {{ form.church_name }}
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-[#A6ADBB] mb-1.5">Occupation <span class="text-[#6B7386]">(optional)</span></label>
+                {{ form.occupation }}
+              </div>
+            </div>
+          </div>
+
+          <label class="flex items-start gap-3 mt-6 text-sm text-[#A6ADBB] cursor-pointer">
+            {{ form.accommodation_requested }}
+            <span>I need accommodation during the conference</span>
           </label>
-        {% endfor %}
-      </div>
 
-      <div id="returning-check" class="hidden mt-4">
-        <label class="block text-xs font-medium text-[#A6ADBB] mb-1.5">Enter the phone number you used before, and we'll pull up your details</label>
-        <div class="flex gap-2">
-          <input type="tel" id="returning-phone" placeholder="+234..."
-                 class="w-full rounded-lg bg-[#0B0E14] border border-[#212836] px-4 py-3 text-sm text-[#EDEFF3] placeholder:text-[#6B7386] focus:outline-none focus:border-[#D4A24C] transition-colors">
-          <button type="button" id="returning-check-btn"
-                  class="shrink-0 rounded-lg border border-[#D4A24C]/50 text-[#D4A24C] text-sm font-medium px-5 py-3 hover:bg-[#D4A24C]/10 transition-colors">Check</button>
+          <button type="submit" class="w-full mt-8 bg-[#D4A24C] hover:bg-[#E8B85E] text-[#1a1305] font-semibold text-sm rounded-lg py-3.5 transition-colors">
+            Complete registration
+          </button>
+
+          <p class="text-center text-[11px] text-[#6B7386] mt-4">Registration is completely free.</p>
         </div>
-        <p id="returning-status" class="text-xs mt-2"></p>
-      </div>
+      </form>
     </div>
-
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div>
-        <label class="block text-xs font-medium text-[#A6ADBB] mb-1.5">First name</label>
-        {{ form.first_name }}
-        {% if form.first_name.errors %}<div class="text-[#E2685A] text-xs mt-1">{{ form.first_name.errors.0 }}</div>{% endif %}
-      </div>
-      <div>
-        <label class="block text-xs font-medium text-[#A6ADBB] mb-1.5">Last name</label>
-        {{ form.last_name }}
-        {% if form.last_name.errors %}<div class="text-[#E2685A] text-xs mt-1">{{ form.last_name.errors.0 }}</div>{% endif %}
-      </div>
-    </div>
-
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-      <div>
-        <label class="block text-xs font-medium text-[#A6ADBB] mb-1.5">Gender</label>
-        {{ form.gender }}
-      </div>
-      <div>
-        <label class="block text-xs font-medium text-[#A6ADBB] mb-1.5">Date of birth</label>
-        {{ form.date_of_birth }}
-      </div>
-    </div>
-
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-      <div>
-        <label class="block text-xs font-medium text-[#A6ADBB] mb-1.5">Phone number</label>
-        {{ form.phone_number }}
-        {% if form.phone_number.errors %}<div class="text-[#E2685A] text-xs mt-1">{{ form.phone_number.errors.0 }}</div>{% endif %}
-      </div>
-      <div>
-        <label class="block text-xs font-medium text-[#A6ADBB] mb-1.5">Email <span class="text-[#6B7386]">(optional)</span></label>
-        {{ form.email_address }}
-      </div>
-    </div>
-
-    <div class="mt-6 pt-6 border-t border-[#212836]">
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label class="block text-xs font-medium text-[#A6ADBB] mb-1.5">State</label>
-          {{ form.state }}
-        </div>
-        <div>
-          <label class="block text-xs font-medium text-[#A6ADBB] mb-1.5">Country</label>
-          {{ form.country }}
-        </div>
-      </div>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-        <div>
-          <label class="block text-xs font-medium text-[#A6ADBB] mb-1.5">Home church <span class="text-[#6B7386]">(optional)</span></label>
-          {{ form.church_name }}
-        </div>
-        <div>
-          <label class="block text-xs font-medium text-[#A6ADBB] mb-1.5">Occupation <span class="text-[#6B7386]">(optional)</span></label>
-          {{ form.occupation }}
-        </div>
-      </div>
-    </div>
-
-    <label class="flex items-start gap-3 mt-6 text-sm text-[#A6ADBB] cursor-pointer">
-      {{ form.accommodation_requested }}
-      <span>I need accommodation during the conference</span>
-    </label>
-
-    <button type="submit" class="w-full mt-8 bg-[#D4A24C] hover:bg-[#E8B85E] text-[#1a1305] font-semibold text-sm rounded-lg py-3.5 transition-colors">
-      Complete registration
-    </button>
-
-    <p class="text-center text-[11px] text-[#6B7386] mt-4">Registration is completely free.</p>
-  </form>
+  </div>
 
   <style>
-    .attend-choice:has(input:checked) { border-color: #D4A24C; color: #EDEFF3; background: rgba(212,162,76,0.08); }
+    .choice-btn:hover { background: rgba(212,162,76,0.06); }
   </style>
 
   <script>
     (function () {
-      var form = document.getElementById('reg-form');
-      var radios = form.querySelectorAll('input[name="has_attended_before"]');
+      var choiceScreen = document.getElementById('choice-screen');
+      var overlay = document.getElementById('modal-overlay');
+      var closeBtn = document.getElementById('modal-close');
+      var choiceButtons = document.querySelectorAll('.choice-btn');
+      var hiddenAnswer = document.getElementById('{{ form.has_attended_before.id_for_label }}') || document.querySelector('[name="has_attended_before"]');
       var returningBlock = document.getElementById('returning-check');
+      var formFields = document.getElementById('form-fields');
+      var titleText = document.getElementById('modal-title-text');
+      var subtitleText = document.getElementById('modal-subtitle-text');
       var phoneInput = document.getElementById('returning-phone');
       var checkBtn = document.getElementById('returning-check-btn');
       var statusEl = document.getElementById('returning-status');
       var mainPhoneInput = document.getElementById('{{ form.phone_number.id_for_label }}');
+      var firstNameInput = document.getElementById('{{ form.first_name.id_for_label }}');
 
-      function updateVisibility() {
-        var checked = form.querySelector('input[name="has_attended_before"]:checked');
-        var isReturning = checked && checked.value === 'yes';
+      function openModal(choice) {
+        if (hiddenAnswer) hiddenAnswer.value = choice;
+        var isReturning = choice === 'yes';
         returningBlock.classList.toggle('hidden', !isReturning);
+        // For a returning visitor, the rest of the form waits until a check has run
+        // (matched or not) so the modal opens on one clear step at a time rather
+        // than the phone box and the full form both competing for attention.
+        formFields.classList.toggle('hidden', isReturning);
+        titleText.textContent = isReturning ? 'Welcome back' : 'Your details';
+        subtitleText.textContent = isReturning
+          ? "Let's find your record — enter the phone number you registered with before."
+          : "Just the basics — takes under a minute.";
+
+        overlay.classList.remove('hidden');
+        choiceScreen.classList.add('hidden');
+        document.body.style.overflow = 'hidden';
+        setTimeout(function () { (isReturning ? phoneInput : firstNameInput).focus(); }, 50);
       }
-      radios.forEach(function (r) { r.addEventListener('change', updateVisibility); });
-      updateVisibility();
+
+      function closeModal() {
+        overlay.classList.add('hidden');
+        choiceScreen.classList.remove('hidden');
+        document.body.style.overflow = '';
+      }
+
+      choiceButtons.forEach(function (btn) {
+        btn.addEventListener('click', function () { openModal(btn.dataset.choice); });
+      });
+      closeBtn.addEventListener('click', closeModal);
+      overlay.addEventListener('click', function (e) { if (e.target === overlay) closeModal(); });
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && !overlay.classList.contains('hidden')) closeModal();
+      });
 
       function getCookie(name) {
         var match = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
         return match ? match.pop() : '';
       }
 
-      checkBtn.addEventListener('click', function () {
-        var phone = phoneInput.value.trim();
-        if (!phone) {
-          statusEl.textContent = 'Enter the phone number you registered with.';
-          statusEl.className = 'text-xs mt-2 text-[#E2685A]';
-          return;
-        }
-        statusEl.textContent = 'Checking…';
-        statusEl.className = 'text-xs mt-2 text-[#6B7386]';
-        checkBtn.disabled = true;
+      function revealFormFields() {
+        formFields.classList.remove('hidden');
+      }
 
-        fetch("{% url 'public:check_returning' %}", {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': getCookie('csrftoken'),
-          },
-          body: JSON.stringify({ phone_number: phone }),
-        })
-          .then(function (res) { return res.json().then(function (data) { return { ok: res.ok, data: data }; }); })
-          .then(function (r) {
-            checkBtn.disabled = false;
-            if (r.data.throttled) {
-              statusEl.textContent = "Too many checks — please fill the form in below instead.";
-              statusEl.className = 'text-xs mt-2 text-[#E2685A]';
-              return;
-            }
-            if (!r.data.matched) {
-              statusEl.textContent = "We couldn't find that number — no problem, just fill in your details below.";
-              statusEl.className = 'text-xs mt-2 text-[#8B93A3]';
-              return;
-            }
-            var fieldMap = ['first_name', 'last_name', 'gender', 'email_address', 'date_of_birth',
-                            'marital_status', 'state', 'country', 'church_name', 'occupation'];
-            fieldMap.forEach(function (name) {
-              var el = form.querySelector('[name="' + name + '"]');
-              if (el && r.data[name]) { el.value = r.data[name]; }
-            });
-            if (mainPhoneInput) { mainPhoneInput.value = phone; }
-            statusEl.textContent = 'Welcome back, ' + r.data.first_name + '! We\u2019ve filled in what we have — just check it over and submit.';
-            statusEl.className = 'text-xs mt-2 text-[#3ECFB0]';
-          })
-          .catch(function () {
-            checkBtn.disabled = false;
-            statusEl.textContent = 'Something went wrong — please just fill in your details below.';
+      if (checkBtn) {
+        checkBtn.addEventListener('click', function () {
+          var phone = phoneInput.value.trim();
+          if (!phone) {
+            statusEl.textContent = 'Enter the phone number you registered with.';
             statusEl.className = 'text-xs mt-2 text-[#E2685A]';
-          });
-      });
+            return;
+          }
+          statusEl.textContent = 'Checking…';
+          statusEl.className = 'text-xs mt-2 text-[#6B7386]';
+          checkBtn.disabled = true;
+
+          fetch("{% url 'public:check_returning' %}", {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+            body: JSON.stringify({ phone_number: phone }),
+          })
+            .then(function (res) { return res.json().then(function (data) { return { ok: res.ok, data: data }; }); })
+            .then(function (r) {
+              checkBtn.disabled = false;
+              if (r.data.throttled) {
+                statusEl.textContent = 'Too many checks — please fill the form in below instead.';
+                statusEl.className = 'text-xs mt-2 text-[#E2685A]';
+                revealFormFields();
+                return;
+              }
+              if (mainPhoneInput) { mainPhoneInput.value = phone; }
+              if (!r.data.matched) {
+                statusEl.textContent = "We couldn't find that number — no problem, just fill in your details below.";
+                statusEl.className = 'text-xs mt-2 text-[#8B93A3]';
+                revealFormFields();
+                firstNameInput.focus();
+                return;
+              }
+              var fieldMap = ['first_name', 'last_name', 'gender', 'email_address', 'date_of_birth',
+                              'marital_status', 'state', 'country', 'church_name', 'occupation'];
+              fieldMap.forEach(function (name) {
+                var el = document.querySelector('#form-fields [name="' + name + '"]');
+                if (el && r.data[name]) { el.value = r.data[name]; }
+              });
+              statusEl.textContent = 'Welcome back, ' + r.data.first_name + '! We\u2019ve filled in what we have — just check it over and submit.';
+              statusEl.className = 'text-xs mt-2 text-[#3ECFB0]';
+              revealFormFields();
+            })
+            .catch(function () {
+              checkBtn.disabled = false;
+              statusEl.textContent = 'Something went wrong — please just fill in your details below.';
+              statusEl.className = 'text-xs mt-2 text-[#E2685A]';
+              revealFormFields();
+            });
+        });
+      }
+
+      // If the page reloaded after a failed submission (validation error / rate
+      // limit), re-open the modal in whatever state the visitor was already in
+      // instead of dropping them back to the choice screen and losing context.
+      var hadErrors = {{ form.errors|yesno:"true,false" }} || {{ rate_limited|yesno:"true,false,false" }};
+      if (hadErrors) {
+        var priorChoice = (hiddenAnswer && hiddenAnswer.value) || 'no';
+        openModal(priorChoice);
+        formFields.classList.remove('hidden');
+      }
     })();
   </script>
 
