@@ -3,44 +3,44 @@
 {% block content %}
 
   <div class="mb-8 text-center">
-    <div class="inline-block text-[11px] font-semibold uppercase tracking-wider text-[#D4A24C] mb-2">Registration</div>
-    <h1 class="font-display text-3xl font-semibold mb-2">{{ event.title }}</h1>
-    <p class="text-[#8B93A3] text-sm">
+    <div class="inline-block text-[11px] font-semibold uppercase tracking-wider text-[var(--grey-700)] mb-2">Registration</div>
+    <h1 class="font-instrument text-3xl font-semibold mb-2 text-[var(--ink)]">{{ event.title }}</h1>
+    <p class="font-poppins text-[var(--grey-700)] text-sm">
       {{ event.start_date|date:"M j" }}–{{ event.end_date|date:"M j, Y" }}{% if event.venue %} · {{ event.venue }}{% endif %}
     </p>
-    {% if event.theme %}<p class="text-[#6B7386] text-sm mt-1 italic">"{{ event.theme }}"</p>{% endif %}
+    {% if event.theme %}<p class="font-poppins text-[var(--grey-500)] text-sm mt-1 italic">"{{ event.theme }}"</p>{% endif %}
   </div>
 
   {# --- Choice screen: the only thing visible until a choice is made --- #}
-  <div id="choice-screen" class="bg-[#12161F] border border-[#212836] rounded-2xl p-6 md:p-10 text-center">
-    <p class="text-sm text-[#A6ADBB] mb-6">Have you Registered for Sycamore'26?</p>
+  <div id="choice-screen" class="bg-white border border-[var(--hair)] rounded-2xl p-6 md:p-10 text-center shadow-sm">
+    <p class="font-poppins text-sm text-[var(--grey-700)] mb-6">Have you Registered for Sycamore'26?</p>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-md mx-auto">
-      <button type="button" data-choice="no" class="choice-btn rounded-xl border border-[#212836] bg-[#0B0E14] hover:border-[#D4A24C] px-6 py-5 text-left transition-colors">
-        <span class="block font-display font-semibold text-base mb-1">No</span>
-        <span class="block text-xs text-[#8B93A3]">This is my first time</span>
+      <button type="button" data-choice="no" class="choice-btn lift rounded-xl border border-[var(--hair)] bg-white hover:border-[var(--ink)] px-6 py-5 text-left transition-colors">
+        <span class="block font-instrument font-semibold text-base mb-1 text-[var(--ink)]">No</span>
+        <span class="block text-xs font-poppins text-[var(--grey-500)]">This is my first time</span>
       </button>
-      <button type="button" data-choice="yes" class="choice-btn rounded-xl border border-[#212836] bg-[#0B0E14] hover:border-[#D4A24C] px-6 py-5 text-left transition-colors">
-        <span class="block font-display font-semibold text-base mb-1">Yes</span>
-        <span class="block text-xs text-[#8B93A3]">I've regisered before</span>
+      <button type="button" data-choice="yes" class="choice-btn lift rounded-xl border border-[var(--hair)] bg-white hover:border-[var(--ink)] px-6 py-5 text-left transition-colors">
+        <span class="block font-instrument font-semibold text-base mb-1 text-[var(--ink)]">Yes</span>
+        <span class="block text-xs font-poppins text-[var(--grey-500)]">I've regisered before</span>
       </button>
     </div>
   </div>
 
   {# --- Modal: hidden until a choice opens it --- #}
   <div id="modal-overlay" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-start md:items-center justify-center p-4 overflow-y-auto">
-    <div class="w-full max-w-xl bg-[#12161F] border border-[#212836] rounded-2xl p-6 md:p-8 my-8 relative">
+    <div class="w-full max-w-xl bg-white border border-[var(--hair)] rounded-2xl p-6 md:p-8 my-8 relative shadow-xl">
 
-      <button type="button" id="modal-close" aria-label="Close" class="absolute top-4 right-4 w-8 h-8 rounded-lg flex items-center justify-center text-[#8B93A3] hover:text-[#EDEFF3] hover:bg-[#1D2330] transition-colors">
+      <button type="button" id="modal-close" aria-label="Close" class="absolute top-4 right-4 w-8 h-8 rounded-lg flex items-center justify-center text-[var(--grey-500)] hover:text-[var(--ink)] hover:bg-[var(--grey-100)] transition-colors">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
       </button>
 
       {% if rate_limited %}
-        <div class="mb-6 rounded-lg border border-[#E2685A]/35 bg-[#E2685A]/10 text-[#F3B4AC] text-sm px-4 py-3">
+        <div class="mb-6 rounded-lg border border-red-200 bg-red-50 text-red-700 text-sm px-4 py-3 font-poppins">
           Too many submissions from this connection recently. Please try again in a little while.
         </div>
       {% endif %}
       {% if form.non_field_errors %}
-        <div class="mb-6 rounded-lg border border-[#E2685A]/35 bg-[#E2685A]/10 text-[#F3B4AC] text-sm px-4 py-3">
+        <div class="mb-6 rounded-lg border border-red-200 bg-red-50 text-red-700 text-sm px-4 py-3 font-poppins">
           {{ form.non_field_errors.0 }}
         </div>
       {% endif %}
@@ -56,100 +56,126 @@
         </div>
 
         <div id="modal-title" class="mb-6">
-          <h2 class="font-display text-xl font-semibold" id="modal-title-text">Your details</h2>
-          <p class="text-xs text-[#8B93A3] mt-1" id="modal-subtitle-text"></p>
+          <h2 class="font-instrument text-xl font-semibold text-[var(--ink)]" id="modal-title-text">Your details</h2>
+          <p class="font-poppins text-xs text-[var(--grey-500)] mt-1" id="modal-subtitle-text"></p>
         </div>
 
         {# --- Returning-visitor phone lookup step — only shown for the 'yes' choice --- #}
-        <div id="returning-check" class="hidden mb-6 pb-6 border-b border-[#212836]">
-          <label class="block text-xs font-medium text-[#A6ADBB] mb-1.5">Enter the phone number you used before, and we'll pull up your details</label>
+        <div id="returning-check" class="hidden mb-6 pb-6 border-b border-[var(--hair)]">
+          <label class="block text-xs font-medium font-poppins text-[var(--grey-700)] mb-1.5">Enter the phone number you used before, and we'll pull up your details</label>
           <div class="flex gap-2">
             <input type="tel" id="returning-phone" placeholder="+234..."
-                   class="w-full rounded-lg bg-[#0B0E14] border border-[#212836] px-4 py-3 text-sm text-[#EDEFF3] placeholder:text-[#6B7386] focus:outline-none focus:border-[#D4A24C] transition-colors">
+                   class="w-full rounded-lg bg-white border border-[var(--hair)] px-4 py-3 text-sm text-[var(--ink)] placeholder:text-[var(--grey-500)] focus:outline-none focus:border-[var(--ink)] transition-colors">
             <button type="button" id="returning-check-btn"
-                    class="shrink-0 rounded-lg border border-[#D4A24C]/50 text-[#D4A24C] text-sm font-medium px-5 py-3 hover:bg-[#D4A24C]/10 transition-colors">Check</button>
+                    class="shrink-0 rounded-lg border border-[var(--ink)] text-[var(--ink)] text-sm font-medium px-5 py-3 hover:bg-[var(--ink)] hover:text-white transition-colors">Check</button>
           </div>
-          <p id="returning-status" class="text-xs mt-2"></p>
+          <p id="returning-status" class="text-xs font-poppins mt-2"></p>
         </div>
 
         {# --- The rest of the form — visible immediately for 'no', revealed after a check (or skip) for 'yes' --- #}
         <div id="form-fields">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label class="block text-xs font-medium text-[#A6ADBB] mb-1.5">First name</label>
+              <label class="block text-xs font-medium font-poppins text-[var(--grey-700)] mb-1.5">First name</label>
               {{ form.first_name }}
-              {% if form.first_name.errors %}<div class="text-[#E2685A] text-xs mt-1">{{ form.first_name.errors.0 }}</div>{% endif %}
+              {% if form.first_name.errors %}<div class="text-red-600 text-xs font-poppins mt-1">{{ form.first_name.errors.0 }}</div>{% endif %}
             </div>
             <div>
-              <label class="block text-xs font-medium text-[#A6ADBB] mb-1.5">Last name</label>
+              <label class="block text-xs font-medium font-poppins text-[var(--grey-700)] mb-1.5">Last name</label>
               {{ form.last_name }}
-              {% if form.last_name.errors %}<div class="text-[#E2685A] text-xs mt-1">{{ form.last_name.errors.0 }}</div>{% endif %}
+              {% if form.last_name.errors %}<div class="text-red-600 text-xs font-poppins mt-1">{{ form.last_name.errors.0 }}</div>{% endif %}
             </div>
           </div>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
             <div>
-              <label class="block text-xs font-medium text-[#A6ADBB] mb-1.5">Gender</label>
+              <label class="block text-xs font-medium font-poppins text-[var(--grey-700)] mb-1.5">Gender</label>
               {{ form.gender }}
             </div>
             <div>
-              <label class="block text-xs font-medium text-[#A6ADBB] mb-1.5">Date of birth</label>
+              <label class="block text-xs font-medium font-poppins text-[var(--grey-700)] mb-1.5">Date of birth</label>
               {{ form.date_of_birth }}
             </div>
           </div>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
             <div>
-              <label class="block text-xs font-medium text-[#A6ADBB] mb-1.5">Phone number</label>
+              <label class="block text-xs font-medium font-poppins text-[var(--grey-700)] mb-1.5">Phone number</label>
               {{ form.phone_number }}
-              {% if form.phone_number.errors %}<div class="text-[#E2685A] text-xs mt-1">{{ form.phone_number.errors.0 }}</div>{% endif %}
+              {% if form.phone_number.errors %}<div class="text-red-600 text-xs font-poppins mt-1">{{ form.phone_number.errors.0 }}</div>{% endif %}
             </div>
             <div>
-              <label class="block text-xs font-medium text-[#A6ADBB] mb-1.5">Email <span class="text-[#6B7386]">(optional)</span></label>
+              <label class="block text-xs font-medium font-poppins text-[var(--grey-700)] mb-1.5">Email <span class="text-[var(--grey-500)]">(optional)</span></label>
               {{ form.email_address }}
             </div>
           </div>
 
-          <div class="mt-6 pt-6 border-t border-[#212836]">
+          <div class="mt-6 pt-6 border-t border-[var(--hair)]">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label class="block text-xs font-medium text-[#A6ADBB] mb-1.5">State</label>
+                <label class="block text-xs font-medium font-poppins text-[var(--grey-700)] mb-1.5">State</label>
                 {{ form.state }}
               </div>
               <div>
-                <label class="block text-xs font-medium text-[#A6ADBB] mb-1.5">Country</label>
+                <label class="block text-xs font-medium font-poppins text-[var(--grey-700)] mb-1.5">Country</label>
                 {{ form.country }}
               </div>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
               <div>
-                <label class="block text-xs font-medium text-[#A6ADBB] mb-1.5">Home church <span class="text-[#6B7386]">(optional)</span></label>
+                <label class="block text-xs font-medium font-poppins text-[var(--grey-700)] mb-1.5">Home church <span class="text-[var(--grey-500)]">(optional)</span></label>
                 {{ form.church_name }}
               </div>
               <div>
-                <label class="block text-xs font-medium text-[#A6ADBB] mb-1.5">Occupation <span class="text-[#6B7386]">(optional)</span></label>
+                <label class="block text-xs font-medium font-poppins text-[var(--grey-700)] mb-1.5">Occupation <span class="text-[var(--grey-500)]">(optional)</span></label>
                 {{ form.occupation }}
               </div>
             </div>
           </div>
 
-          <label class="flex items-start gap-3 mt-6 text-sm text-[#A6ADBB] cursor-pointer">
+          <label class="flex items-start gap-3 mt-6 text-sm font-poppins text-[var(--grey-700)] cursor-pointer">
             {{ form.accommodation_requested }}
             <span>I need accommodation during the conference</span>
           </label>
 
-          <button type="submit" class="w-full mt-8 bg-[#D4A24C] hover:bg-[#E8B85E] text-[#1a1305] font-semibold text-sm rounded-lg py-3.5 transition-colors">
+          <button type="submit" class="btn-primary w-full mt-8 font-semibold text-sm rounded-lg py-3.5">
             Complete registration
           </button>
 
-          <p class="text-center text-[11px] text-[#6B7386] mt-4">Registration is completely free.</p>
+          <p class="text-center text-[11px] font-poppins text-[var(--grey-500)] mt-4">Registration is completely free.</p>
         </div>
       </form>
     </div>
   </div>
 
   <style>
-    .choice-btn:hover { background: rgba(212,162,76,0.06); }
+    .choice-btn:hover { background: var(--grey-100); }
+
+    /* Light-theme override for Django-rendered form widgets, regardless of
+       whatever classes the widget attrs carry from forms.py */
+    #reg-form input[type="text"],
+    #reg-form input[type="tel"],
+    #reg-form input[type="email"],
+    #reg-form input[type="date"],
+    #reg-form input[type="number"],
+    #reg-form select,
+    #reg-form textarea{
+      width:100%; background:#fff !important; color: var(--ink) !important;
+      border:1px solid var(--hair) !important; border-radius:0.5rem;
+      padding:0.75rem 1rem; font-size:0.875rem; font-family:"Poppins", sans-serif;
+      transition: border-color .2s ease;
+    }
+    #reg-form input[type="text"]:focus,
+    #reg-form input[type="tel"]:focus,
+    #reg-form input[type="email"]:focus,
+    #reg-form input[type="date"]:focus,
+    #reg-form input[type="number"]:focus,
+    #reg-form select:focus,
+    #reg-form textarea:focus{
+      outline:none; border-color: var(--ink) !important;
+    }
+    #reg-form input::placeholder{ color: var(--grey-500); }
+    #reg-form input[type="checkbox"]{ width:auto; accent-color: var(--ink); margin-top:2px; }
   </style>
 
   <script>
@@ -217,11 +243,11 @@
           var phone = phoneInput.value.trim();
           if (!phone) {
             statusEl.textContent = 'Enter the phone number you registered with.';
-            statusEl.className = 'text-xs mt-2 text-[#E2685A]';
+            statusEl.className = 'text-xs font-poppins mt-2 text-red-600';
             return;
           }
           statusEl.textContent = 'Checking…';
-          statusEl.className = 'text-xs mt-2 text-[#6B7386]';
+          statusEl.className = 'text-xs font-poppins mt-2 text-[var(--grey-500)]';
           checkBtn.disabled = true;
 
           fetch("{% url 'public:check_returning' %}", {
@@ -234,14 +260,14 @@
               checkBtn.disabled = false;
               if (r.data.throttled) {
                 statusEl.textContent = 'Too many checks — please fill the form in below instead.';
-                statusEl.className = 'text-xs mt-2 text-[#E2685A]';
+                statusEl.className = 'text-xs font-poppins mt-2 text-red-600';
                 revealFormFields();
                 return;
               }
               if (mainPhoneInput) { mainPhoneInput.value = phone; }
               if (!r.data.matched) {
                 statusEl.textContent = "We couldn't find that number — no problem, just fill in your details below.";
-                statusEl.className = 'text-xs mt-2 text-[#8B93A3]';
+                statusEl.className = 'text-xs font-poppins mt-2 text-[var(--grey-500)]';
                 revealFormFields();
                 firstNameInput.focus();
                 return;
@@ -253,13 +279,13 @@
                 if (el && r.data[name]) { el.value = r.data[name]; }
               });
               statusEl.textContent = 'Welcome back, ' + r.data.first_name + '! We\u2019ve filled in what we have — just check it over and submit.';
-              statusEl.className = 'text-xs mt-2 text-[#3ECFB0]';
+              statusEl.className = 'text-xs font-poppins mt-2 text-green-600';
               revealFormFields();
             })
             .catch(function () {
               checkBtn.disabled = false;
               statusEl.textContent = 'Something went wrong — please just fill in your details below.';
-              statusEl.className = 'text-xs mt-2 text-[#E2685A]';
+              statusEl.className = 'text-xs font-poppins mt-2 text-red-600';
               revealFormFields();
             });
         });
