@@ -12,7 +12,9 @@
       <div class="sub">Sycamore Event Management System</div>
     </div>
 
-    {% if form.non_field_errors %}
+    {% if throttled %}
+      <div class="form-error-box">Too many failed sign-in attempts. Please try again in a few minutes.</div>
+    {% elif form.non_field_errors %}
       <div class="form-error-box">{{ form.non_field_errors.0 }}</div>
     {% endif %}
 

@@ -9,3 +9,8 @@ python-decouple==3.8
 qrcode==8.2
 reportlab==5.0.0
 sqlparse==0.5.5
+
+# Production-only: required if REDIS_URL is set in settings.py (durable,
+# shared rate-limit/cache backend across app-server workers). Not needed
+# for local dev, which falls back to Django's in-memory cache.
+redis==5.2.1

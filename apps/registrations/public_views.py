@@ -7,18 +7,25 @@ every view in views.py is not.
 """
 
 import json
+import logging
 
+from django.conf import settings
 from django.core.cache import cache
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
+from apps.core.captcha import verify_hcaptcha
 from apps.core.models import SystemSettings
 from apps.events.models import Event, RegistrationStatus
 from apps.people.services import DuplicatePersonError, PersonService
 
+from . import idcards
+from .models import Registration
 from .public_forms import PublicRegistrationForm, WorkerPublicRegistrationForm
 from .services import AlreadyRegisteredError, RegistrationService
+
+logger = logging.getLogger(__name__)
 
 RATE_LIMIT_MAX_SUBMISSIONS = 5
 RATE_LIMIT_WINDOW_SECONDS = 3600
@@ -75,16 +82,17 @@ def _process_registration(request, event, settings_obj):
     if event.registration_status != RegistrationStatus.OPEN:
         return render(request, 'public/closed.html', {'event': event, 'settings': settings_obj})
 
+    ctx = {'event': event, 'settings': settings_obj, 'hcaptcha_site_key': settings.HCAPTCHA_SITE_KEY}
+
     if request.method == 'POST':
         if _rate_limited(request):
-            form = PublicRegistrationForm()
-            return render(request, 'public/register.html', {
-                'form': form, 'event': event, 'settings': settings_obj,
-                'rate_limited': True,
-            })
+            ctx.update(form=PublicRegistrationForm(), rate_limited=True)
+            return render(request, 'public/register.html', ctx)
 
         form = PublicRegistrationForm(request.POST, request.FILES)
-        if form.is_valid():
+        if not verify_hcaptcha(request.POST.get('h-captcha-response', ''), remote_ip=_client_ip(request)):
+            form.add_error(None, "We couldn't verify you're human — please try the checkbox again.")
+        elif form.is_valid():
             try:
                 result = RegistrationService.register_public(
                     event=event,
@@ -113,7 +121,8 @@ def _process_registration(request, event, settings_obj):
     else:
         form = PublicRegistrationForm()
 
-    return render(request, 'public/register.html', {'form': form, 'event': event, 'settings': settings_obj})
+    ctx['form'] = form
+    return render(request, 'public/register.html', ctx)
 
 
 def _process_worker_registration(request, event, settings_obj):
@@ -126,16 +135,17 @@ def _process_worker_registration(request, event, settings_obj):
     if event.registration_status != RegistrationStatus.OPEN:
         return render(request, 'public/closed.html', {'event': event, 'settings': settings_obj})
 
+    ctx = {'event': event, 'settings': settings_obj, 'hcaptcha_site_key': settings.HCAPTCHA_SITE_KEY}
+
     if request.method == 'POST':
         if _rate_limited(request, key_prefix='public_worker_reg_throttle'):
-            form = WorkerPublicRegistrationForm()
-            return render(request, 'public/register_worker.html', {
-                'form': form, 'event': event, 'settings': settings_obj,
-                'rate_limited': True,
-            })
+            ctx.update(form=WorkerPublicRegistrationForm(), rate_limited=True)
+            return render(request, 'public/register_worker.html', ctx)
 
         form = WorkerPublicRegistrationForm(request.POST, request.FILES)
-        if form.is_valid():
+        if not verify_hcaptcha(request.POST.get('h-captcha-response', ''), remote_ip=_client_ip(request)):
+            form.add_error(None, "We couldn't verify you're human — please try the checkbox again.")
+        elif form.is_valid():
             try:
                 result = RegistrationService.register_public_worker(
                     event=event,
@@ -166,7 +176,8 @@ def _process_worker_registration(request, event, settings_obj):
     else:
         form = WorkerPublicRegistrationForm()
 
-    return render(request, 'public/register_worker.html', {'form': form, 'event': event, 'settings': settings_obj})
+    ctx['form'] = form
+    return render(request, 'public/register_worker.html', ctx)
 
 
 def public_register(request, event_slug):
@@ -216,6 +227,44 @@ def public_register_success(request, event_slug):
     return render(request, 'public/success.html', {
         'event': event, 'data': data, 'settings': SystemSettings.load(),
     })
+
+
+def _get_registration_by_token(event_slug, qr_token):
+    """
+    Shared lookup for the public card view/download endpoints. Gated by
+    knowledge of the Person's qr_token — a random UUID that's already the
+    secret encoded in the QR code printed on the card itself and used for
+    attendance check-in — rather than a database primary key, so this is
+    a capability URL (unguessable, not enumerable) and not a public
+    listing: nobody can browse or iterate their way to someone else's card.
+    """
+    return get_object_or_404(
+        Registration.objects.select_related('person', 'event', 'department'),
+        person__qr_token=qr_token, event__slug=event_slug,
+    )
+
+
+def public_card_view(request, event_slug, qr_token):
+    """The page linked from the registration confirmation email — shows
+    the card and offers a PDF download, with no login required."""
+    registration = _get_registration_by_token(event_slug, qr_token)
+    return render(request, 'public/card.html', {
+        'registration': registration, 'person': registration.person, 'event': registration.event,
+    })
+
+
+def public_card_png(request, event_slug, qr_token):
+    """Inline PNG preview for public/card.html — never a download."""
+    registration = _get_registration_by_token(event_slug, qr_token)
+    return HttpResponse(idcards.render_card_png(registration), content_type='image/png')
+
+
+def public_card_download(request, event_slug, qr_token):
+    registration = _get_registration_by_token(event_slug, qr_token)
+    pdf_bytes = idcards.render_card_pdf(registration)
+    response = HttpResponse(pdf_bytes, content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="{registration.person.person_id}-id-card.pdf"'
+    return response
 
 
 @require_POST

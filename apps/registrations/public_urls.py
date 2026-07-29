@@ -13,6 +13,9 @@ urlpatterns = [
     path('check-returning/', public_views.check_returning, name='check_returning'),
 
     path('<slug:event_slug>/worker/', public_views.public_register_worker, name='register_worker'),
+    path('<slug:event_slug>/card/<uuid:qr_token>/', public_views.public_card_view, name='card'),
+    path('<slug:event_slug>/card/<uuid:qr_token>/preview.png', public_views.public_card_png, name='card_png'),
+    path('<slug:event_slug>/card/<uuid:qr_token>/download/', public_views.public_card_download, name='card_download'),
     path('<slug:event_slug>/', public_views.public_register, name='register'),
     path('<slug:event_slug>/success/', public_views.public_register_success, name='success'),
 ]

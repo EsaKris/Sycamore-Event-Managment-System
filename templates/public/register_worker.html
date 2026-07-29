@@ -97,6 +97,12 @@
         </div>
       </div>
 
+      {% if hcaptcha_site_key %}
+        <div class="mt-6 flex justify-center">
+          <div class="h-captcha" data-sitekey="{{ hcaptcha_site_key }}"></div>
+        </div>
+      {% endif %}
+
       <button type="submit" class="btn-primary w-full mt-8 font-semibold text-sm rounded-lg py-3.5">
         Complete registration
       </button>
@@ -104,6 +110,10 @@
       <p class="text-center text-[11px] font-poppins text-[var(--grey-500)] mt-4">Registration is completely free.</p>
     </form>
   </div>
+
+  {% if hcaptcha_site_key %}
+    <script src="https://js.hcaptcha.com/1/api.js" async defer></script>
+  {% endif %}
 
   <div class="text-center mt-6">
     <a href="{% url 'public:register' event.slug %}" class="font-poppins text-[13px] text-[var(--grey-700)] hover:text-[var(--ink)] transition-colors">Registering as a participant instead? →</a>

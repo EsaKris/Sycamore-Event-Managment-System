@@ -145,6 +145,12 @@
             <span>I need accommodation during the conference</span>
           </label>
 
+          {% if hcaptcha_site_key %}
+            <div class="mt-6 flex justify-center">
+              <div class="h-captcha" data-sitekey="{{ hcaptcha_site_key }}"></div>
+            </div>
+          {% endif %}
+
           <button type="submit" class="btn-primary w-full mt-8 font-semibold text-sm rounded-lg py-3.5">
             Complete registration
           </button>
@@ -154,6 +160,10 @@
       </form>
     </div>
   </div>
+
+  {% if hcaptcha_site_key %}
+    <script src="https://js.hcaptcha.com/1/api.js" async defer></script>
+  {% endif %}
 
   <style>
     .choice-btn:hover { background: var(--grey-100); }

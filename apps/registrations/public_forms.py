@@ -4,6 +4,8 @@ from apps.departments.models import Department
 from apps.people.models import Gender, MaritalStatus
 from apps.registrations.models import WorkerType
 
+MAX_PHOTO_SIZE_BYTES = 5 * 1024 * 1024  # 5MB — friendly in-form error well under the hard 8MB server-wide cap in settings.py
+
 TEXT = 'w-full rounded-lg bg-[#12161F] border border-[#212836] px-4 py-3 text-sm text-[#EDEFF3] placeholder:text-[#6B7386] focus:outline-none focus:border-[#D4A24C] transition-colors'
 SELECT = TEXT + ' appearance-none'
 FILE = 'w-full rounded-lg bg-[#12161F] border border-[#212836] px-4 py-3 text-sm text-[#EDEFF3] file:mr-3 file:rounded-md file:border-0 file:bg-[#D4A24C] file:text-[#1a1305] file:font-semibold file:px-3 file:py-1.5 file:text-xs focus:outline-none focus:border-[#D4A24C] transition-colors'
@@ -61,6 +63,12 @@ class PublicRegistrationForm(forms.Form):
         if value:
             raise forms.ValidationError('Spam detected.')
         return value
+
+    def clean_photo(self):
+        photo = self.cleaned_data.get('photo')
+        if photo and photo.size > MAX_PHOTO_SIZE_BYTES:
+            raise forms.ValidationError('That photo is too large — please use one under 5MB.')
+        return photo
 
     def person_fields(self) -> dict:
         excluded = ('website', 'accommodation_requested', 'has_attended_before')
@@ -125,6 +133,12 @@ class WorkerPublicRegistrationForm(forms.Form):
         if value:
             raise forms.ValidationError('Spam detected.')
         return value
+
+    def clean_photo(self):
+        photo = self.cleaned_data.get('photo')
+        if photo and photo.size > MAX_PHOTO_SIZE_BYTES:
+            raise forms.ValidationError('That photo is too large — please use one under 5MB.')
+        return photo
 
     def person_fields(self) -> dict:
         excluded = ('website', 'has_attended_before', 'worker_type', 'department')

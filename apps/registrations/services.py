@@ -16,6 +16,7 @@ from apps.core.services import NotificationService
 from apps.people.models import Person
 from apps.people.services import DuplicatePersonError, PersonService
 
+from .emails import send_registration_confirmation_email
 from .models import Registration
 
 
@@ -45,6 +46,7 @@ class RegistrationService:
             message=f"{person.full_name} registered for {event.title} as {registration.get_category_display()}.",
             link_url=f"/dashboard/registrations/{registration.pk}/",
         )
+        transaction.on_commit(lambda: send_registration_confirmation_email(registration))
         return RegistrationResult(person=person, registration=registration, person_was_created=True)
 
     @staticmethod
@@ -70,6 +72,7 @@ class RegistrationService:
             message=f"{person.full_name} (returning attendee) registered for {event.title} as {registration.get_category_display()}.",
             link_url=f"/dashboard/registrations/{registration.pk}/",
         )
+        transaction.on_commit(lambda: send_registration_confirmation_email(registration))
         return RegistrationResult(person=person, registration=registration, person_was_created=False)
 
     @staticmethod

@@ -15,17 +15,23 @@ Email Campaigns UI.
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Count
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.generic import ListView
 
+from apps.accounts.mixins import RolesRequiredMixin, roles_required
+from apps.accounts.models import AdminRole
 from apps.core.models import AuditLog
 
 from .forms import EmailCampaignForm, EmailTemplateForm, PLACEHOLDER_LEGEND
 from .models import CampaignStatus, EmailCampaign, EmailTemplate, RecipientStatus
 from .services import CampaignService
+
+# Campaigns send bulk email to real registrant addresses — restricted to
+# the role built for it, plus the Super Administrator (per RolesRequiredMixin
+# / roles_required, which always lets the Super Admin through).
+CAMPAIGNS_ROLES = (AdminRole.MEDIA_OFFICER,)
 
 # 1x1 transparent GIF, served by the open-tracking pixel endpoint.
 _TRACKING_PIXEL = bytes.fromhex(
@@ -45,7 +51,8 @@ def _log(request, action, obj):
 
 # ---------------------------------------------------------------- Templates
 
-class TemplateListView(LoginRequiredMixin, ListView):
+class TemplateListView(RolesRequiredMixin, ListView):
+    allowed_roles = CAMPAIGNS_ROLES
     login_url = 'dashboard:login'
     model = EmailTemplate
     template_name = 'campaigns/template_list.html'
@@ -57,6 +64,7 @@ class TemplateListView(LoginRequiredMixin, ListView):
 
 
 @login_required(login_url='dashboard:login')
+@roles_required(*CAMPAIGNS_ROLES)
 def template_form(request, pk=None):
     instance = get_object_or_404(EmailTemplate, pk=pk) if pk else None
 
@@ -80,7 +88,8 @@ def template_form(request, pk=None):
 
 # ---------------------------------------------------------------- Campaigns
 
-class CampaignListView(LoginRequiredMixin, ListView):
+class CampaignListView(RolesRequiredMixin, ListView):
+    allowed_roles = CAMPAIGNS_ROLES
     login_url = 'dashboard:login'
     model = EmailCampaign
     template_name = 'campaigns/list.html'
@@ -96,6 +105,7 @@ class CampaignListView(LoginRequiredMixin, ListView):
 
 
 @login_required(login_url='dashboard:login')
+@roles_required(*CAMPAIGNS_ROLES)
 def campaign_form(request, pk=None):
     instance = get_object_or_404(EmailCampaign, pk=pk) if pk else None
     if instance and instance.is_locked:
@@ -131,6 +141,7 @@ def campaign_form(request, pk=None):
 
 
 @login_required(login_url='dashboard:login')
+@roles_required(*CAMPAIGNS_ROLES)
 def campaign_detail(request, pk):
     campaign = get_object_or_404(EmailCampaign.objects.select_related('template', 'event', 'target_department'), pk=pk)
     recipients = campaign.recipients.select_related('person').order_by('person__first_name')
@@ -147,6 +158,7 @@ def campaign_detail(request, pk):
 
 
 @login_required(login_url='dashboard:login')
+@roles_required(*CAMPAIGNS_ROLES)
 def campaign_sync(request, pk):
     campaign = get_object_or_404(EmailCampaign, pk=pk)
     if request.method == 'POST':
@@ -156,6 +168,7 @@ def campaign_sync(request, pk):
 
 
 @login_required(login_url='dashboard:login')
+@roles_required(*CAMPAIGNS_ROLES)
 def campaign_send(request, pk):
     campaign = get_object_or_404(EmailCampaign, pk=pk)
     if request.method == 'POST':

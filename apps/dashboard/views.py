@@ -1,11 +1,13 @@
 from datetime import timedelta
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import LoginView, LogoutView
+from django.core.cache import cache
 from django.db.models import Count
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -30,10 +32,42 @@ from . import exports as exports_module
 from .analytics import build_analytics
 
 
+def _client_ip(request) -> str:
+    forwarded = request.META.get('HTTP_X_FORWARDED_FOR')
+    return forwarded.split(',')[0].strip() if forwarded else request.META.get('REMOTE_ADDR', 'unknown')
+
+
 class AdminLoginView(LoginView):
+    """
+    Brute-force protection: after LOGIN_THROTTLE_ATTEMPTS failed submissions
+    from the same IP, further attempts are locked out for
+    LOGIN_THROTTLE_COOLDOWN_SECONDS — regardless of username, since the
+    thing being protected against is password-guessing against any account,
+    not just one. Uses the same cache-based approach as the public
+    registration throttle (apps/registrations/public_views.py); a
+    successful login clears the counter for that IP immediately.
+    """
+
     template_name = 'dashboard/login.html'
     authentication_form = AdminLoginForm
     redirect_authenticated_user = True
+
+    def _throttle_key(self) -> str:
+        return f'login_throttle:{_client_ip(self.request)}'
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.method == 'POST' and cache.get(self._throttle_key(), 0) >= settings.LOGIN_THROTTLE_ATTEMPTS:
+            return render(request, self.template_name, {'form': self.authentication_form(), 'throttled': True})
+        return super().dispatch(request, *args, **kwargs)
+
+    def form_invalid(self, form):
+        key = self._throttle_key()
+        cache.set(key, cache.get(key, 0) + 1, settings.LOGIN_THROTTLE_COOLDOWN_SECONDS)
+        return super().form_invalid(form)
+
+    def form_valid(self, form):
+        cache.delete(self._throttle_key())
+        return super().form_valid(form)
 
 
 class AdminLogoutView(LogoutView):
