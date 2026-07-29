@@ -45,7 +45,7 @@
         </div>
       {% endif %}
 
-      <form method="post" id="reg-form" novalidate>
+      <form method="post" id="reg-form" enctype="multipart/form-data" novalidate>
         {% csrf_token %}
         {{ form.has_attended_before }}
 
@@ -74,6 +74,13 @@
 
         {# --- The rest of the form — visible immediately for 'no', revealed after a check (or skip) for 'yes' --- #}
         <div id="form-fields">
+          <div class="mb-4">
+            <label class="block text-xs font-medium font-poppins text-[var(--grey-700)] mb-1.5">Passport photograph <span class="text-[var(--grey-500)]">(optional)</span></label>
+            {{ form.photo }}
+            {% if form.photo.help_text %}<p class="text-[11px] font-poppins text-[var(--grey-500)] mt-1">{{ form.photo.help_text }}</p>{% endif %}
+            {% if form.photo.errors %}<div class="text-red-600 text-xs font-poppins mt-1">{{ form.photo.errors.0 }}</div>{% endif %}
+          </div>
+
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label class="block text-xs font-medium font-poppins text-[var(--grey-700)] mb-1.5">First name</label>
@@ -158,6 +165,7 @@
     #reg-form input[type="email"],
     #reg-form input[type="date"],
     #reg-form input[type="number"],
+    #reg-form input[type="file"],
     #reg-form select,
     #reg-form textarea{
       width:100%; background:#fff !important; color: var(--ink) !important;
@@ -165,11 +173,13 @@
       padding:0.75rem 1rem; font-size:0.875rem; font-family:"Poppins", sans-serif;
       transition: border-color .2s ease;
     }
+    #reg-form input[type="file"]{ padding:0.6rem 0.75rem; }
     #reg-form input[type="text"]:focus,
     #reg-form input[type="tel"]:focus,
     #reg-form input[type="email"]:focus,
     #reg-form input[type="date"]:focus,
     #reg-form input[type="number"]:focus,
+    #reg-form input[type="file"]:focus,
     #reg-form select:focus,
     #reg-form textarea:focus{
       outline:none; border-color: var(--ink) !important;

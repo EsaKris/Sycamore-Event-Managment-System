@@ -17,7 +17,7 @@ from apps.core.models import SystemSettings
 from apps.events.models import Event, RegistrationStatus
 from apps.people.services import DuplicatePersonError, PersonService
 
-from .public_forms import PublicRegistrationForm
+from .public_forms import PublicRegistrationForm, WorkerPublicRegistrationForm
 from .services import AlreadyRegisteredError, RegistrationService
 
 RATE_LIMIT_MAX_SUBMISSIONS = 5
@@ -83,7 +83,7 @@ def _process_registration(request, event, settings_obj):
                 'rate_limited': True,
             })
 
-        form = PublicRegistrationForm(request.POST)
+        form = PublicRegistrationForm(request.POST, request.FILES)
         if form.is_valid():
             try:
                 result = RegistrationService.register_public(
@@ -107,12 +107,66 @@ def _process_registration(request, event, settings_obj):
                     'registration_number': result.registration.registration_number,
                     'event_title': event.title,
                     'event_slug': event.slug,
+                    'category': 'participant',
                 }
                 return redirect('public:success', event_slug=event.slug)
     else:
         form = PublicRegistrationForm()
 
     return render(request, 'public/register.html', {'form': form, 'event': event, 'settings': settings_obj})
+
+
+def _process_worker_registration(request, event, settings_obj):
+    """
+    Worker/Pastor counterpart of _process_registration — same shape, own
+    form (WorkerPublicRegistrationForm) and its own throttle key so a
+    burst of worker sign-ups can't eat into the participant form's rate
+    limit (or vice versa) on a shared kiosk/IP.
+    """
+    if event.registration_status != RegistrationStatus.OPEN:
+        return render(request, 'public/closed.html', {'event': event, 'settings': settings_obj})
+
+    if request.method == 'POST':
+        if _rate_limited(request, key_prefix='public_worker_reg_throttle'):
+            form = WorkerPublicRegistrationForm()
+            return render(request, 'public/register_worker.html', {
+                'form': form, 'event': event, 'settings': settings_obj,
+                'rate_limited': True,
+            })
+
+        form = WorkerPublicRegistrationForm(request.POST, request.FILES)
+        if form.is_valid():
+            try:
+                result = RegistrationService.register_public_worker(
+                    event=event,
+                    person_fields=form.person_fields(),
+                    registration_fields=form.registration_fields(),
+                )
+            except AlreadyRegisteredError:
+                form.add_error(None, "Looks like you're already registered for this event. "
+                                      "Check your phone or email for your registration details.")
+            except DuplicatePersonError:
+                # Only reachable in a race between two near-simultaneous submissions
+                # with the same phone/email — register_public_worker's search already
+                # handles the normal case, so this is a last-resort safety net.
+                form.add_error(None, "Something matched an existing record — please try again in a moment.")
+            else:
+                request.session['public_registration'] = {
+                    'registration_id': result.registration.id,
+                    'person_id': result.person.person_id,
+                    'full_name': result.person.full_name,
+                    'registration_number': result.registration.registration_number,
+                    'event_title': event.title,
+                    'event_slug': event.slug,
+                    'category': 'worker',
+                    'worker_type': result.registration.get_worker_type_display(),
+                    'department': result.registration.department.name if result.registration.department else '',
+                }
+                return redirect('public:success', event_slug=event.slug)
+    else:
+        form = WorkerPublicRegistrationForm()
+
+    return render(request, 'public/register_worker.html', {'form': form, 'event': event, 'settings': settings_obj})
 
 
 def public_register(request, event_slug):
@@ -133,6 +187,23 @@ def public_register_default(request):
     if event is None:
         return render(request, 'public/no_active_event.html', {'settings': settings_obj})
     return _process_registration(request, event, settings_obj)
+
+
+def public_register_worker(request, event_slug):
+    """Worker/Pastor registration at its full, slugged URL."""
+    event = get_object_or_404(Event, slug=event_slug)
+    return _process_worker_registration(request, event, SystemSettings.load())
+
+
+def public_register_worker_default(request):
+    """Worker/Pastor registration at the short '/register/worker/' URL —
+    resolves the same SystemSettings.default_event as the participant
+    short route."""
+    settings_obj = SystemSettings.load()
+    event = settings_obj.default_event
+    if event is None:
+        return render(request, 'public/no_active_event.html', {'settings': settings_obj})
+    return _process_worker_registration(request, event, settings_obj)
 
 
 def public_register_success(request, event_slug):

@@ -135,6 +135,7 @@
                           <div class="row-item-sub" style="word-break:break-all">{{ request.scheme }}://{{ request.get_host }}{% url 'public:register_default' %}</div>
                         {% endif %}
                         <div class="row-item-sub" style="word-break:break-all">{{ request.scheme }}://{{ request.get_host }}{% url 'public:register' ev.slug %}</div>
+                        <div class="row-item-sub" style="word-break:break-all">{{ request.scheme }}://{{ request.get_host }}{% url 'public:register_worker' ev.slug %} <span style="color:var(--text-muted)">(Worker/Pastor)</span></div>
                       </div>
                     </div>
                     <div class="row-item-meta">

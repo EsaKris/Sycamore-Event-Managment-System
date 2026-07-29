@@ -82,24 +82,17 @@ class RegistrationService:
 
     @classmethod
     @transaction.atomic
-    def register_public(cls, *, event, person_fields: dict, accommodation_requested: bool = False) -> RegistrationResult:
+    def _register_public(cls, *, event, person_fields: dict, registration_fields: dict) -> RegistrationResult:
         """
-        The public self-registration entrypoint (apps/registrations
-        public_views.py) — no admin involved, no login. There's no
-        visible 'have you attended before?' question here on purpose:
-        showing a stranger a lookup that could surface someone else's
-        record is a privacy risk unacceptable for an unauthenticated
-        form. Instead this matches invisibly, server-side, only against
-        the phone/email the visitor themselves just typed — the same
-        dedup guarantee as the dashboard wizard, without ever exposing
-        anyone else's data.
-
-        Always registers as a Participant — self-service Worker signup
-        needs department/coordinator involvement that belongs in the
-        dashboard, not a public form.
+        Shared core of every public, unauthenticated registration entrypoint
+        (participant or worker/pastor) — no admin involved, no login. There's
+        no visible 'have you attended before?' question here on purpose:
+        showing a stranger a lookup that could surface someone else's record
+        is a privacy risk unacceptable for an unauthenticated form. Instead
+        this matches invisibly, server-side, only against the phone/email
+        the visitor themselves just typed — the same dedup guarantee as the
+        dashboard wizard, without ever exposing anyone else's data.
         """
-        registration_fields = {'category': 'participant', 'accommodation_requested': accommodation_requested}
-
         existing = PersonService.search(
             phone_number=person_fields.get('phone_number', ''),
             email_address=person_fields.get('email_address', ''),
@@ -110,3 +103,27 @@ class RegistrationService:
                 registration_fields=registration_fields,
             )
         return cls.register_new_person(event=event, person_fields=person_fields, registration_fields=registration_fields)
+
+    @classmethod
+    def register_public(cls, *, event, person_fields: dict, accommodation_requested: bool = False) -> RegistrationResult:
+        """
+        The public self-registration entrypoint for Participants
+        (apps/registrations public_views.py). Always registers as a
+        Participant — Worker/Pastor self-service goes through
+        register_public_worker() instead, which is the only public
+        entrypoint allowed to set category='worker'.
+        """
+        registration_fields = {'category': 'participant', 'accommodation_requested': accommodation_requested}
+        return cls._register_public(event=event, person_fields=person_fields, registration_fields=registration_fields)
+
+    @classmethod
+    def register_public_worker(cls, *, event, person_fields: dict, registration_fields: dict) -> RegistrationResult:
+        """
+        The public self-registration entrypoint for Workers and Pastors
+        (apps/registrations public_views.py / public_forms.WorkerPublicRegistrationForm).
+        registration_fields must already carry 'category': 'worker',
+        'worker_type', and 'department' — Registration.clean() enforces
+        that a department is present for every worker registration, the
+        same rule the dashboard wizard follows.
+        """
+        return cls._register_public(event=event, person_fields=person_fields, registration_fields=registration_fields)

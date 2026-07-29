@@ -36,9 +36,12 @@
       <div class="mb-10"></div>
     {% endif %}
 
-    <div class="flex flex-col sm:flex-row items-center justify-center gap-3 mb-14">
+    <div class="flex flex-col sm:flex-row items-center justify-center gap-3 mb-4">
       <a href="{% url 'public:register_default' %}" class="w-full sm:w-auto bg-[#D4A24C] hover:bg-[#E8B85E] text-[#1a1305] font-semibold text-sm rounded-full px-8 py-3.5 transition-colors">Register now</a>
       <a href="#about" class="w-full sm:w-auto border border-[#212836] hover:border-[#D4A24C]/50 text-[#EDEFF3] font-medium text-sm rounded-full px-8 py-3.5 transition-colors">Learn more</a>
+    </div>
+    <div class="mb-14">
+      <a href="{% url 'public:register_worker_default' %}" class="text-[13px] text-[#A6ADBB] hover:text-[#D4A24C] underline underline-offset-2 transition-colors">Registering as a Worker or Pastor? →</a>
     </div>
 
     {# Countdown #}
@@ -141,6 +144,9 @@
     <div class="text-[11px] font-semibold uppercase tracking-wider text-[#D4A24C] mb-4">{{ event.title }}</div>
     <h2 class="font-display text-3xl md:text-5xl font-semibold mb-8 max-w-2xl mx-auto">Come with expectation,<br>leave with transformation</h2>
     <a href="{% url 'public:register_default' %}" class="inline-block bg-[#D4A24C] hover:bg-[#E8B85E] text-[#1a1305] font-semibold text-sm rounded-full px-8 py-3.5 transition-colors">Register now</a>
+    <p class="mt-4">
+      <a href="{% url 'public:register_worker_default' %}" class="text-[13px] text-[#8B93A3] hover:text-[#EDEFF3] transition-colors">Registering as a Worker or Pastor? →</a>
+    </p>
     {% if settings.giving_url %}
       <p class="mt-4">
         <a href="{{ settings.giving_url }}" target="_blank" rel="noopener" class="text-[13px] text-[#8B93A3] hover:text-[#EDEFF3] transition-colors">Or give toward the conference →</a>

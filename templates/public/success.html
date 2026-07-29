@@ -15,10 +15,20 @@
       <span class="font-poppins text-[var(--grey-700)] text-sm">Registration number</span>
       <span class="font-instrument font-semibold text-[var(--ink)]">{{ data.registration_number }}</span>
     </div>
-    <div class="flex items-center justify-between py-3">
+    <div class="flex items-center justify-between py-3{% if data.category == 'worker' %} border-b border-[var(--hair)]{% endif %}">
       <span class="font-poppins text-[var(--grey-700)] text-sm">Your permanent ID</span>
       <span class="font-instrument font-semibold text-[var(--ink)]">{{ data.person_id }}</span>
     </div>
+    {% if data.category == 'worker' %}
+      <div class="flex items-center justify-between py-3 border-b border-[var(--hair)]">
+        <span class="font-poppins text-[var(--grey-700)] text-sm">Registered as</span>
+        <span class="font-instrument font-semibold text-[var(--ink)]">{{ data.worker_type }}</span>
+      </div>
+      <div class="flex items-center justify-between py-3">
+        <span class="font-poppins text-[var(--grey-700)] text-sm">Department</span>
+        <span class="font-instrument font-semibold text-[var(--ink)]">{{ data.department }}</span>
+      </div>
+    {% endif %}
     <p class="font-poppins text-[11px] text-[var(--grey-500)] mt-2">
       This ID stays with you across every future conference — save this page or take a screenshot. Your ID card and QR check-in code will be ready at the event.
     </p>
@@ -32,7 +42,7 @@
   {% endif %}
 
   <div class="text-center">
-    <a href="{% url 'public:register' event.slug %}" class="font-poppins text-[13px] text-[var(--grey-700)] hover:text-[var(--ink)] transition-colors">Register someone else →</a>
+    <a href="{% if data.category == 'worker' %}{% url 'public:register_worker' event.slug %}{% else %}{% url 'public:register' event.slug %}{% endif %}" class="font-poppins text-[13px] text-[var(--grey-700)] hover:text-[var(--ink)] transition-colors">Register someone else →</a>
   </div>
 
 {% endblock %}
