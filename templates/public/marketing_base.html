@@ -4,7 +4,65 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Primary Meta Tags -->
   <title>{% block title %}{{ settings.system_name|default:"SEMS" }}{% endblock %}</title>
+  <meta name="description" content="{% block meta_description %}{% if event %}Register for {{ event.title }} at {{ settings.church_name|default:'Again and Afresh Church' }}. Reserve your spot today.{% else %}{{ settings.church_name|default:'Again and Afresh Church' }} — event registration, schedules, and updates.{% endif %}{% endblock %}">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="{{ request.build_absolute_uri }}">
+
+  <!-- Favicons -->
+  <link rel="icon" type="image/x-icon" href="{% static 'favicons/favicon.ico' %}">
+  <link rel="icon" type="image/png" sizes="32x32" href="{% static 'favicons/favicon-32x32.png' %}">
+  <link rel="icon" type="image/png" sizes="16x16" href="{% static 'favicons/favicon-16x16.png' %}">
+  <link rel="apple-touch-icon" sizes="180x180" href="{% static 'favicons/apple-touch-icon.png' %}">
+  <link rel="manifest" href="{% static 'favicons/site.webmanifest' %}">
+
+  <!-- Open Graph / Facebook / WhatsApp -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="{{ request.build_absolute_uri }}">
+  <meta property="og:title" content="{% block og_title %}{{ settings.system_name|default:'SEMS' }} — {{ settings.church_name|default:'Again and Afresh Church' }}{% endblock %}">
+  <meta property="og:description" content="{% block og_description %}{% if event %}Register for {{ event.title }} at {{ settings.church_name|default:'Again and Afresh Church' }}.{% else %}{{ settings.church_name|default:'Again and Afresh Church' }} — event registration, schedules, and updates.{% endif %}{% endblock %}">
+  <meta property="og:image" content="{% block og_image %}{{ request.scheme }}://{{ request.get_host }}{% static 'favicons/android-chrome-512x512.png' %}{% endblock %}">
+
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary_large_image">
+  <meta property="twitter:url" content="{{ request.build_absolute_uri }}">
+  <meta property="twitter:title" content="{% block twitter_title %}{{ settings.system_name|default:'SEMS' }} — {{ settings.church_name|default:'Again and Afresh Church' }}{% endblock %}">
+  <meta property="twitter:description" content="{% block twitter_description %}{% if event %}Register for {{ event.title }} at {{ settings.church_name|default:'Again and Afresh Church' }}.{% else %}{{ settings.church_name|default:'Again and Afresh Church' }} — event registration, schedules, and updates.{% endif %}{% endblock %}">
+
+  <!-- Structured data: Organization (every page) + Event (when one is live) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "{{ settings.church_name|default:'Again and Afresh Church'|escapejs }}",
+    "url": "{{ request.scheme }}://{{ request.get_host }}/"
+  }
+  </script>
+  {% if event %}
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Event",
+    "name": "{{ event.title|escapejs }}",
+    "startDate": "{{ event.start_date|date:'c' }}",
+    "endDate": "{{ event.end_date|date:'c' }}",
+    {% if event.venue %}"location": {
+      "@type": "Place",
+      "name": "{{ event.venue|escapejs }}"
+    },{% endif %}
+    "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
+    "eventStatus": "https://schema.org/EventScheduled",
+    "organizer": {
+      "@type": "Organization",
+      "name": "{{ settings.church_name|default:'Again and Afresh Church'|escapejs }}"
+    },
+    "url": "{{ request.scheme }}://{{ request.get_host }}{% url 'public:register_default' %}"
+  }
+  </script>
+  {% endif %}
+
   <link rel="stylesheet" href="{% static 'registrations/public/css/tailwind.css' %}">
   <style>
     @font-face { font-family: 'Space Grotesk'; src: url('/static/dashboard/fonts/SpaceGrotesk.ttf') format('truetype'); font-weight: 300 700; font-display: swap; }

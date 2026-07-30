@@ -61,6 +61,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sitemaps',
 
     # Third-party
     'rest_framework',
@@ -80,6 +81,11 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    # Must be first — compresses the final response body, so it needs to
+    # run after everything else has already built that response (Django
+    # processes the response phase of middleware bottom-to-top, so "first
+    # in the list" = "last to touch the response").
+    'django.middleware.gzip.GZipMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'corsheaders.middleware.CorsMiddleware',
@@ -185,19 +191,18 @@ STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 
-
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-
+# WhiteNoise (above) only serves STATIC_URL
 SERVE_MEDIA_VIA_DJANGO = config('SERVE_MEDIA_VIA_DJANGO', default=False, cast=bool)
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # ---------------------------------------------------------------------------
-# Cache — backs rate limiting (public registration throttle, staff login
+# Cache — backs rate limiting 
 # ---------------------------------------------------------------------------
 REDIS_URL = config('REDIS_URL', default='')
 if REDIS_URL:
@@ -246,8 +251,7 @@ SEMS_PERSON_ID_PREFIX = config('SEMS_PERSON_ID_PREFIX', default='SYC')
 SEMS_PERSON_ID_DIGITS = config('SEMS_PERSON_ID_DIGITS', default=6, cast=int)
 
 # ---------------------------------------------------------------------------
-# Backups — apps/core/backups.py. A backup bundles both the database dump
-# AND the media folder.
+# Backups 
 # ---------------------------------------------------------------------------
 BACKUP_DIR = config('BACKUP_DIR', default=str(BASE_DIR / 'backups'))
 BACKUP_RETENTION_COUNT = config('BACKUP_RETENTION_COUNT', default=14, cast=int)
@@ -257,7 +261,7 @@ BACKUP_S3_BUCKET = config('BACKUP_S3_BUCKET', default='')
 BACKUP_S3_PREFIX = config('BACKUP_S3_PREFIX', default='sems-backups/')
 
 # ---------------------------------------------------------------------------
-# Email — Gmail / Google Workspace SMTP.
+# Email — Gmail / Google Workspace SMTP. 
 # ---------------------------------------------------------------------------
 EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
@@ -284,7 +288,7 @@ if not DEBUG and EMAIL_BACKEND == 'django.core.mail.backends.smtp.EmailBackend' 
 SEMS_SITE_URL = config('SEMS_SITE_URL', default='')
 
 # ---------------------------------------------------------------------------
-# hCaptcha — public registration forms (participant + worker/pastor).
+# hCaptcha — public registration forms
 # ---------------------------------------------------------------------------
 HCAPTCHA_SITE_KEY = config('HCAPTCHA_SITE_KEY', default='')
 HCAPTCHA_SECRET_KEY = config('HCAPTCHA_SECRET_KEY', default='')
