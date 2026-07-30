@@ -43,6 +43,11 @@ SECURE_REFERRER_POLICY = 'same-origin'
 X_FRAME_OPTIONS = 'DENY'
 
 
+USE_X_FORWARDED_HOST = config('USE_X_FORWARDED_HOST', default=False, cast=bool)
+if config('BEHIND_PROXY', default=False, cast=bool):
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+
 FILE_UPLOAD_MAX_MEMORY_SIZE = 8 * 1024 * 1024  # 8MB
 DATA_UPLOAD_MAX_MEMORY_SIZE = 8 * 1024 * 1024
 
@@ -76,6 +81,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -106,10 +112,23 @@ TEMPLATES = [
 WSGI_APPLICATION = 'config.wsgi.application'
 
 # ---------------------------------------------------------------------------
-# Database — Postgres when DB_HOST is configured (recommended for
-# production:
+# Database — DB_ENGINE picks the backend once DB_HOST is set:
 # ---------------------------------------------------------------------------
-if config('DB_HOST', default=''):
+DB_ENGINE = config('DB_ENGINE', default='postgresql').lower()
+
+if config('DB_HOST', default='') and DB_ENGINE == 'mysql':
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': config('DB_NAME', default='sems_db'),
+            'USER': config('DB_USER', default='sems_user'),
+            'PASSWORD': config('DB_PASSWORD', default=''),
+            'HOST': config('DB_HOST'),
+            'PORT': config('DB_PORT', default='3306'),
+            'OPTIONS': {'charset': 'utf8mb4'},
+        }
+    }
+elif config('DB_HOST', default=''):
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
@@ -166,14 +185,19 @@ STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 
+
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+
+SERVE_MEDIA_VIA_DJANGO = config('SERVE_MEDIA_VIA_DJANGO', default=False, cast=bool)
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # ---------------------------------------------------------------------------
 # Cache — backs rate limiting (public registration throttle, staff login
-# throttle) 
 # ---------------------------------------------------------------------------
 REDIS_URL = config('REDIS_URL', default='')
 if REDIS_URL:
@@ -222,15 +246,18 @@ SEMS_PERSON_ID_PREFIX = config('SEMS_PERSON_ID_PREFIX', default='SYC')
 SEMS_PERSON_ID_DIGITS = config('SEMS_PERSON_ID_DIGITS', default=6, cast=int)
 
 # ---------------------------------------------------------------------------
-# Email — Gmail / Google Workspace SMTP. In dev (DEBUG=True) with no
-# EMAIL_HOST_USER configured, this falls back to printing emails to the
-# console instead of actually sending, so local development never needs
-# real credentials.
-#
-# EMAIL_HOST_USER/EMAIL_HOST_PASSWORD must be a Gmail "App Password" —
-# https://myaccount.google.com/apppasswords — NOT the account's normal
-# login password (Google blocks plain-password SMTP auth by default, and
-# an app password can be revoked independently if it ever leaks).
+# Backups — apps/core/backups.py. A backup bundles both the database dump
+# AND the media folder.
+# ---------------------------------------------------------------------------
+BACKUP_DIR = config('BACKUP_DIR', default=str(BASE_DIR / 'backups'))
+BACKUP_RETENTION_COUNT = config('BACKUP_RETENTION_COUNT', default=14, cast=int)
+
+# Optional — set BACKUP_S3_BUCKET to also upload every backup off-host.
+BACKUP_S3_BUCKET = config('BACKUP_S3_BUCKET', default='')
+BACKUP_S3_PREFIX = config('BACKUP_S3_PREFIX', default='sems-backups/')
+
+# ---------------------------------------------------------------------------
+# Email — Gmail / Google Workspace SMTP.
 # ---------------------------------------------------------------------------
 EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
@@ -257,10 +284,7 @@ if not DEBUG and EMAIL_BACKEND == 'django.core.mail.backends.smtp.EmailBackend' 
 SEMS_SITE_URL = config('SEMS_SITE_URL', default='')
 
 # ---------------------------------------------------------------------------
-# hCaptcha — public registration forms (participant + worker/pastor). Leave
-# both blank in dev to skip verification entirely (a warning is logged);
-# get real keys at https://dashboard.hcaptcha.com/ before going live, since
-# the honeypot + rate limit alone won't stop a determined bot.
+# hCaptcha — public registration forms (participant + worker/pastor).
 # ---------------------------------------------------------------------------
 HCAPTCHA_SITE_KEY = config('HCAPTCHA_SITE_KEY', default='')
 HCAPTCHA_SECRET_KEY = config('HCAPTCHA_SECRET_KEY', default='')

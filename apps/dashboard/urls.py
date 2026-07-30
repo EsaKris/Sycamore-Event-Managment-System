@@ -19,5 +19,6 @@ urlpatterns = [
     path('notifications/<int:pk>/read/', views.notification_mark_read, name='notification_mark_read'),
     path('notifications/mark-all-read/', views.notification_mark_all_read, name='notification_mark_all_read'),
     path('settings/', views.SettingsView.as_view(), name='settings'),
+    path('settings/backup/', views.backup_download, name='backup_download'),
     path('', views.DashboardHomeView.as_view(), name='home'),
 ]

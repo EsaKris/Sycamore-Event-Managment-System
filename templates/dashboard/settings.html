@@ -151,9 +151,26 @@
 
           <div class="card">
             <div class="card-title">Backups</div>
-            <div class="card-subtitle">Not yet automated from this dashboard.</div>
-            <div class="empty-state" style="padding:14px 8px">
-              <p>Back up the Postgres database directly (e.g. <code>pg_dump</code>) until scheduled backups are built.</p>
+            <div class="card-subtitle">Database + all uploaded photos, bundled together — a database-only backup would leave every photo broken.</div>
+            <div style="padding:14px 8px">
+              {% if last_backup %}
+                <p class="row-item-sub">Last backup: {{ last_backup.name }} ({{ last_backup_size_mb }}MB)</p>
+              {% else %}
+                <p class="row-item-sub">No backup has been created yet.</p>
+              {% endif %}
+              <p class="row-item-sub">Stored at: <code>{{ backup_dir }}</code>{% if backup_s3_bucket %} &middot; also uploading to S3 bucket <code>{{ backup_s3_bucket }}</code>{% endif %}. Keeping the last {{ backup_retention_count }} local copies.</p>
+
+              <form method="get" action="{% url 'dashboard:backup_download' %}" style="margin-top:10px">
+                <button type="submit" class="btn btn-primary">Download Backup Now</button>
+              </form>
+
+              <p class="row-item-sub" style="margin-top:14px">
+                For nightly automated backups, schedule this on your server:<br>
+                <code>0 2 * * * cd /path/to/project &amp;&amp; python manage.py backup_db</code>
+              </p>
+              {% if not backup_s3_bucket %}
+                <p class="row-item-sub">Set <code>BACKUP_S3_BUCKET</code> in your environment to also upload every backup off-host automatically.</p>
+              {% endif %}
             </div>
           </div>
         </div>

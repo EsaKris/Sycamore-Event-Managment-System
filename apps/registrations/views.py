@@ -170,17 +170,16 @@ def details(request):
                         person=existing_person,
                         updated_fields=person_form.cleaned_data,
                         registration_fields=registration_fields,
+                        actor=request.user,
                     )
-                    _log(request, 'Updated Person (via registration)', result.person)
                 else:
                     result = RegistrationService.register_new_person(
                         event=event,
                         person_fields=person_form.cleaned_data,
                         registration_fields=registration_fields,
+                        actor=request.user,
                     )
-                    _log(request, 'Created Person', result.person)
 
-                _log(request, 'Created Registration', result.registration)
                 _clear_wizard(request)
                 messages.success(
                     request,
@@ -364,8 +363,12 @@ def id_card_set_badge_label(request, pk):
     needing a full edit form."""
     registration = get_object_or_404(Registration, pk=pk)
     if request.method == 'POST':
+        old_label = registration.badge_label
         registration.badge_label = request.POST.get('badge_label', '').strip()
         registration.save(update_fields=['badge_label'])
+        if registration.badge_label != old_label:
+            _log(request, f"Set badge label to '{registration.badge_label or '(cleared)'}' "
+                           f"(was '{old_label or '(none)'}') for {registration.person.full_name}", registration)
         messages.success(request, 'Badge label updated.')
     return redirect('registrations:detail', pk=pk)
 

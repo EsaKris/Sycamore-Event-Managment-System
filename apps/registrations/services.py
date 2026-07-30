@@ -12,6 +12,7 @@ from typing import Optional
 
 from django.db import transaction
 
+from apps.core.models import AuditLog
 from apps.core.services import NotificationService
 from apps.people.models import Person
 from apps.people.services import DuplicatePersonError, PersonService
@@ -35,11 +36,34 @@ class RegistrationService:
 
     @staticmethod
     @transaction.atomic
-    def register_new_person(*, event, person_fields: dict, registration_fields: dict) -> RegistrationResult:
-        """'NO, I have not attended before' branch."""
+    def register_new_person(
+        *, event, person_fields: dict, registration_fields: dict, actor=None, ip_address: str = '',
+    ) -> RegistrationResult:
+        """
+        'NO, I have not attended before' branch. `actor` is the
+        administrator responsible when this is called from the dashboard
+        wizard, or None for a public self-registration — either way this
+        is the single place a Person/Registration pair gets created, so
+        it's the single place the audit trail is written, rather than
+        each call site (dashboard wizard, public participant form, public
+        worker/pastor form) needing to remember to log it separately.
+        """
         person = PersonService.create_person(**person_fields)
         registration = Registration.objects.create(
             person=person, event=event, is_returning_attendee=False, **registration_fields,
+        )
+        AuditLog.objects.create(
+            administrator=actor,
+            action=f"Created Person '{person.full_name}' ({person.person_id})"
+                   + ('' if actor else ' via public self-registration'),
+            model_name='Person', object_id=str(person.pk), ip_address=ip_address or None,
+        )
+        AuditLog.objects.create(
+            administrator=actor,
+            action=f"Created Registration '{registration.registration_number}' for {person.full_name} "
+                   f"({event.title}, {registration.get_category_display()})"
+                   + ('' if actor else ' via public self-registration'),
+            model_name='Registration', object_id=str(registration.pk), ip_address=ip_address or None,
         )
         NotificationService.notify(
             title='New Registration',
@@ -53,6 +77,7 @@ class RegistrationService:
     @transaction.atomic
     def register_returning_person(
         *, event, person: Person, updated_fields: Optional[dict] = None, registration_fields: dict,
+        actor=None, ip_address: str = '',
     ) -> RegistrationResult:
         """'YES, I have attended before' branch — person was already found
         via PersonService.search() by the caller."""
@@ -63,9 +88,22 @@ class RegistrationService:
 
         if updated_fields:
             PersonService.update_person(person, **updated_fields)
+            AuditLog.objects.create(
+                administrator=actor,
+                action=f"Updated Person '{person.full_name}' ({person.person_id}) via registration"
+                       + ('' if actor else ' — public self-registration'),
+                model_name='Person', object_id=str(person.pk), ip_address=ip_address or None,
+            )
 
         registration = Registration.objects.create(
             person=person, event=event, is_returning_attendee=True, **registration_fields,
+        )
+        AuditLog.objects.create(
+            administrator=actor,
+            action=f"Created Registration '{registration.registration_number}' for {person.full_name} "
+                   f"({event.title}, {registration.get_category_display()}, returning attendee)"
+                   + ('' if actor else ' via public self-registration'),
+            model_name='Registration', object_id=str(registration.pk), ip_address=ip_address or None,
         )
         NotificationService.notify(
             title='New Registration',
@@ -85,7 +123,7 @@ class RegistrationService:
 
     @classmethod
     @transaction.atomic
-    def _register_public(cls, *, event, person_fields: dict, registration_fields: dict) -> RegistrationResult:
+    def _register_public(cls, *, event, person_fields: dict, registration_fields: dict, ip_address: str = '') -> RegistrationResult:
         """
         Shared core of every public, unauthenticated registration entrypoint
         (participant or worker/pastor) — no admin involved, no login. There's
@@ -95,6 +133,11 @@ class RegistrationService:
         this matches invisibly, server-side, only against the phone/email
         the visitor themselves just typed — the same dedup guarantee as the
         dashboard wizard, without ever exposing anyone else's data.
+
+        actor is always None here (never passed) — a public submission has
+        no administrator to attribute it to; ip_address is recorded on the
+        AuditLog entry instead, same as any other unauthenticated write in
+        this codebase (e.g. the campaign open-tracking pixel).
         """
         existing = PersonService.search(
             phone_number=person_fields.get('phone_number', ''),
@@ -103,12 +146,17 @@ class RegistrationService:
         if existing:
             return cls.register_returning_person(
                 event=event, person=existing.person, updated_fields=person_fields,
-                registration_fields=registration_fields,
+                registration_fields=registration_fields, ip_address=ip_address,
             )
-        return cls.register_new_person(event=event, person_fields=person_fields, registration_fields=registration_fields)
+        return cls.register_new_person(
+            event=event, person_fields=person_fields, registration_fields=registration_fields,
+            ip_address=ip_address,
+        )
 
     @classmethod
-    def register_public(cls, *, event, person_fields: dict, accommodation_requested: bool = False) -> RegistrationResult:
+    def register_public(
+        cls, *, event, person_fields: dict, accommodation_requested: bool = False, ip_address: str = '',
+    ) -> RegistrationResult:
         """
         The public self-registration entrypoint for Participants
         (apps/registrations public_views.py). Always registers as a
@@ -117,10 +165,15 @@ class RegistrationService:
         entrypoint allowed to set category='worker'.
         """
         registration_fields = {'category': 'participant', 'accommodation_requested': accommodation_requested}
-        return cls._register_public(event=event, person_fields=person_fields, registration_fields=registration_fields)
+        return cls._register_public(
+            event=event, person_fields=person_fields, registration_fields=registration_fields,
+            ip_address=ip_address,
+        )
 
     @classmethod
-    def register_public_worker(cls, *, event, person_fields: dict, registration_fields: dict) -> RegistrationResult:
+    def register_public_worker(
+        cls, *, event, person_fields: dict, registration_fields: dict, ip_address: str = '',
+    ) -> RegistrationResult:
         """
         The public self-registration entrypoint for Workers and Pastors
         (apps/registrations public_views.py / public_forms.WorkerPublicRegistrationForm).
@@ -129,4 +182,7 @@ class RegistrationService:
         that a department is present for every worker registration, the
         same rule the dashboard wizard follows.
         """
-        return cls._register_public(event=event, person_fields=person_fields, registration_fields=registration_fields)
+        return cls._register_public(
+            event=event, person_fields=person_fields, registration_fields=registration_fields,
+            ip_address=ip_address,
+        )

@@ -3,9 +3,12 @@ class AuditLogMiddleware:
     Attaches the request's IP address to the request object so any view
     or service can write it into an AuditLog entry without re-deriving it.
 
-    This is intentionally minimal for now. The full Activity Logs module
-    (auto-logging every create/update/delete with affected-record links)
-    is a later phase — see apps/core/models.py:AuditLog.
+    The actual logging happens at the point of action across the codebase
+    (service-layer methods in accounts/, events/, departments/, followup/,
+    registrations/ services.py and views.py, plus the login view in
+    apps/dashboard/views.py) rather than here — this middleware only
+    supplies the IP address, consistently, to whichever of those write
+    paths the request ends up on.
     """
 
     def __init__(self, get_response):

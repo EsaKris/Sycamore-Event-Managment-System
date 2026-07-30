@@ -98,6 +98,7 @@ def _process_registration(request, event, settings_obj):
                     event=event,
                     person_fields=form.person_fields(),
                     accommodation_requested=form.cleaned_data['accommodation_requested'],
+                    ip_address=_client_ip(request),
                 )
             except AlreadyRegisteredError:
                 form.add_error(None, "Looks like you're already registered for this event. "
@@ -151,6 +152,7 @@ def _process_worker_registration(request, event, settings_obj):
                     event=event,
                     person_fields=form.person_fields(),
                     registration_fields=form.registration_fields(),
+                    ip_address=_client_ip(request),
                 )
             except AlreadyRegisteredError:
                 form.add_error(None, "Looks like you're already registered for this event. "

@@ -12,6 +12,8 @@ from typing import Optional
 
 from django.db import transaction
 
+from apps.core.models import AuditLog
+
 from .models import Person
 
 
@@ -123,9 +125,14 @@ class PersonService:
         The ONLY sanctioned way to remove a Person, and only ever a soft
         delete — per spec, hard deletion is a Super Administrator-only,
         exceptional action and even then this codebase defaults to
-        archiving. Wire this up to an explicit confirmation + audit log
-        entry at the view layer.
+        archiving.
         """
         if not getattr(requested_by, 'is_super_admin', False):
             raise PermissionError('Only the Super Administrator can delete a Person record.')
+
+        AuditLog.objects.create(
+            administrator=requested_by,
+            action=f"Deleted (soft) Person '{person.full_name}' ({person.person_id})",
+            model_name='Person', object_id=str(person.pk),
+        )
         person.soft_delete()

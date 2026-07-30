@@ -67,7 +67,14 @@ class AdminLoginView(LoginView):
 
     def form_valid(self, form):
         cache.delete(self._throttle_key())
-        return super().form_valid(form)
+        response = super().form_valid(form)
+        AuditLog.objects.create(
+            administrator=self.request.user,
+            action=f"Signed in as '{self.request.user.username}'",
+            model_name='User', object_id=str(self.request.user.pk),
+            ip_address=_client_ip(self.request),
+        )
+        return response
 
 
 class AdminLogoutView(LogoutView):
@@ -378,6 +385,14 @@ class SettingsView(SuperAdminRequiredMixin, TemplateView):
         ctx['person_id_digits'] = django_settings.SEMS_PERSON_ID_DIGITS
         ctx['departments'] = Department.objects.order_by('name')
         ctx['public_events'] = Event.objects.exclude(status=EventStatus.ARCHIVED).order_by('-year')
+        ctx['backup_dir'] = django_settings.BACKUP_DIR
+        ctx['backup_s3_bucket'] = django_settings.BACKUP_S3_BUCKET
+        ctx['backup_retention_count'] = django_settings.BACKUP_RETENTION_COUNT
+        from pathlib import Path
+        backup_dir = Path(django_settings.BACKUP_DIR)
+        existing = sorted(backup_dir.glob('sems-backup-*.tar.gz'), key=lambda p: p.stat().st_mtime, reverse=True) if backup_dir.exists() else []
+        ctx['last_backup'] = existing[0] if existing else None
+        ctx['last_backup_size_mb'] = round(existing[0].stat().st_size / (1024 * 1024), 1) if existing else None
         return ctx
 
     def post(self, request, *args, **kwargs):
@@ -401,6 +416,40 @@ class SettingsView(SuperAdminRequiredMixin, TemplateView):
         )
         messages.success(request, 'Settings updated.')
         return redirect('dashboard:settings')
+
+
+@login_required(login_url='dashboard:login')
+def backup_download(request):
+    """
+    Super-Admin-only, on-demand backup: builds the same db+media archive
+    apps.core.management.commands.backup_db uses for cron, and streams it
+    straight back as a download — nothing is emailed or stored anywhere
+    the person didn't already have access to.
+    """
+    if not getattr(request.user, 'is_super_admin', False):
+        messages.error(request, 'Only the Super Administrator can download a backup.')
+        return redirect('dashboard:settings')
+
+    from django.http import FileResponse
+
+    from apps.core.backups import BackupError, create_backup
+
+    try:
+        result = create_backup()
+    except BackupError as exc:
+        messages.error(request, f"Backup failed: {exc}")
+        return redirect('dashboard:settings')
+
+    AuditLog.objects.create(
+        administrator=request.user,
+        action=f"Downloaded backup ({result.path.name})"
+               + (' — also uploaded to S3' if result.uploaded_to_s3 else ''),
+        model_name='Backup', ip_address=getattr(request, 'client_ip', None),
+    )
+    if result.s3_error:
+        messages.warning(request, f"Backup created, but the S3 upload failed: {result.s3_error}")
+
+    return FileResponse(open(result.path, 'rb'), as_attachment=True, filename=result.path.name)
 
 
 @login_required(login_url='dashboard:login')

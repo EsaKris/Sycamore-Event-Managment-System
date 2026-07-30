@@ -229,6 +229,24 @@
   </div>
 </footer>
 
+<!-- ====== COOKIE NOTICE ======
+     Informational only, not a blocking consent gate — this site only ever
+     sets strictly-necessary cookies (session + CSRF), plus hCaptcha's own
+     cookie on the registration forms for bot protection. No analytics or
+     ad tracking, so there's nothing non-essential to ask opt-in consent
+     for; this is disclosure, not a gate. -->
+<div id="cookie-notice" class="fixed inset-x-0 bottom-0 z-50 hidden">
+  <div class="max-w-4xl mx-auto m-4 bg-[#12161F] border border-[#212836] rounded-xl shadow-lg px-5 py-4 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+    <p class="font-poppins text-[13px] text-[#C7CCD6] leading-relaxed flex-1">
+      We use essential cookies to keep your session and forms working, and hCaptcha (a third-party bot-check) on our registration pages. We don't use analytics or advertising cookies.
+    </p>
+    <button id="cookie-notice-dismiss" type="button"
+            class="shrink-0 bg-[#D4A24C] hover:bg-[#E8B85E] text-[#1a1305] font-semibold text-[13px] rounded-full px-5 py-2 transition-colors">
+      Got it
+    </button>
+  </div>
+</div>
+
 <script>
   document.addEventListener('DOMContentLoaded', function () {
     const menuBtn = document.getElementById('menu-btn');
@@ -269,6 +287,19 @@
       entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('in'); });
     }, { threshold: 0.15 });
     revealEls.forEach(el => io.observe(el));
+
+    // Cookie notice — informational, dismiss once and don't show again on
+    // this device. localStorage rather than a cookie, so we're not setting
+    // a cookie just to remember a cookie notice was dismissed.
+    const cookieNotice = document.getElementById('cookie-notice');
+    const cookieDismiss = document.getElementById('cookie-notice-dismiss');
+    if (cookieNotice && !localStorage.getItem('sems_cookie_notice_dismissed')) {
+      cookieNotice.classList.remove('hidden');
+    }
+    cookieDismiss?.addEventListener('click', () => {
+      localStorage.setItem('sems_cookie_notice_dismissed', '1');
+      cookieNotice.classList.add('hidden');
+    });
   });
 </script>
 

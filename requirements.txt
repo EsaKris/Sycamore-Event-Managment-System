@@ -9,8 +9,11 @@ python-decouple==3.8
 qrcode==8.2
 reportlab==5.0.0
 sqlparse==0.5.5
-
-# Production-only: required if REDIS_URL is set in settings.py (durable,
-# shared rate-limit/cache backend across app-server workers). Not needed
-# for local dev, which falls back to Django's in-memory cache.
+whitenoise==6.8.2
+PyMySQL==1.1.1
 redis==5.2.1
+
+# Required if BACKUP_S3_BUCKET is set in settings.py, to upload backups
+# off-host to S3. Not needed for local-disk-only backups.
+boto3==1.35.36
+
